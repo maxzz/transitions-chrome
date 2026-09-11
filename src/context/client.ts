@@ -8,13 +8,13 @@ import { handleRecordedAnimations } from "./recording";
  */
 
 function createDevToolsClient() {
-  handleRecordedAnimations();
-  handleInspectedAnimation();
-  handleMessages();
-  window.postMessage({ type: "clientready" }, "*");
+    handleRecordedAnimations();
+    handleInspectedAnimation();
+    handleMessages();
+    window.postMessage({ type: "clientready" }, "*");
 }
 
 if (!window.__MOTION_DEV_TOOLS) {
-  window.__MOTION_DEV_TOOLS = true;
-  createDevToolsClient();
+    window.__MOTION_DEV_TOOLS = true;
+    createDevToolsClient();
 }
