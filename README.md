@@ -1,6 +1,6 @@
-# Motion DevTools
+# transitions-chrome
 
-TypeScript + Vite conversion of the Motion DevTools Chrome extension (originally store build `2.0.0`). Use this project to debug page-component detection and keep working on the extension.
+TypeScript + Vite conversion of the Motion DevTools Chrome extension (originally store build `2.0.0`), renamed so it can sit beside the store extension. Use this project to debug page-component detection and keep working on the extension.
 
 ## Commands
 
@@ -24,7 +24,7 @@ src/
     plugins/        css-animation, css-transition, motion-one
     runtime/        Motion One playback used when scrubbing
   editor/           DevTools panel shell (fonts, CSS, loads the original UI)
-  devtools/         Registers the Motion panel
+  devtools/         Registers the transitions-chrome panel
   shared/           Message and animation types
 public/
   vendor/           Original editor UI bundle

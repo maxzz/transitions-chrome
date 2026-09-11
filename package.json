@@ -1,5 +1,5 @@
 {
-  "name": "motion-devtools",
+  "name": "transitions-chrome",
   "version": "2.0.0",
   "description": "Inspect, edit and export animations made with CSS and Motion.",
   "private": true,

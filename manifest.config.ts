@@ -2,7 +2,7 @@ import { defineManifest } from "@crxjs/vite-plugin";
 
 export default defineManifest({
   manifest_version: 3,
-  name: "Motion DevTools",
+  name: "transitions-chrome",
   version: "2.0.0",
   description: "Inspect, edit and export animations made with CSS and Motion One.",
   permissions: ["storage", "webNavigation"],
