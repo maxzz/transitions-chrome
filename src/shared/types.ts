@@ -21,6 +21,7 @@ export interface KeyframeData {
   easing: unknown;
   offset: number;
   isEdited: boolean;
+  isUserCreated?: boolean;
 }
 
 export interface ValueAnimationRecord {

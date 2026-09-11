@@ -34,7 +34,6 @@ export default defineManifest({
       matches: ["https://*/*", "http://*/*", "file:///*"],
       resources: [
         "src/editor/index.html",
-        "vendor/editor.bundle.js",
         "src/context/client.js",
         "src/context/client.js.map",
       ],
