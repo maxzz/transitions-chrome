@@ -11,6 +11,7 @@ This repo is a TypeScript + Vite rebuild of Motion DevTools `2.0.0`, renamed so 
 - [Application structure](#application-structure)
   - [Runtime roles](#runtime-roles)
   - [Source tree](#source-tree)
+  - [editor-vendor](#editor-vendor)
 - [Execution flows](#execution-flows)
   - [Worlds and connections](#worlds-and-connections)
   - [Startup and injection](#startup-and-injection)
@@ -127,6 +128,119 @@ vite.config.ts
 ```
 
 Shared contracts live in `src/shared` so the service worker, page scripts, and panel stay aligned on message `type` strings (`init`, `clientready`, `animationstart`, `isrecording`, `inspectanimation`, `scrubanimation`, `clear`).
+
+### editor-vendor
+
+`src/editor-vendor` is the DevTools panel application: a TypeScript port of the original `editor.bundle.js` UI, still on **React 17**. `src/editor/main.ts` imports it after fonts and CSS; `index.tsx` mounts `<Editor />` into `#app` with `ReactDOM.render`.
+
+Folders split by job, not by file size:
+
+| Folder | Role |
+| --- | --- |
+| *(root)* | `index.tsx` mounts the app; `types.ts` is the editor store and keyframe contract |
+| `state/` | Zustand vanilla store, undo/redo history, keyframe timing helpers |
+| `chrome/` | `devtools-page` port (record / inspect / scrub / clear) and keyboard shortcuts |
+| `export/` | Turn the selected animation into Motion One or CSS source |
+| `lib/` | Small utilities: `omitKeys`, rAF framesync for playback, shallow equality |
+| `ui/` | React views: empty state, tab bar, timeline chrome, export modal, Leva keyframe panel |
+
+`ui/` is composed as a tree. `editor.tsx` always renders the tab bar and the keyframe panel; it swaps `Instructions` for `Timeline` once animations exist. `Timeline` owns the sidebar, time markers, keyframe tracks, playback controls, and the export overlay.
+
+```mermaid
+flowchart TB
+  subgraph editorVendor["src/editor-vendor"]
+    Index["index.tsx"]
+    Types["types.ts"]
+
+    subgraph chrome["chrome/"]
+      Port["port.ts"]
+      Keyboard["keyboard.ts"]
+    end
+
+    subgraph stateFolder["state/"]
+      Store["store.ts"]
+      KeyframeUtils["keyframe-utils.ts"]
+    end
+
+    subgraph exportFolder["export/"]
+      Codegen["codegen.ts"]
+    end
+
+    subgraph libFolder["lib/"]
+      OmitKeys["omit-keys.ts"]
+      Framesync["framesync.ts"]
+      Shallow["shallow.ts"]
+    end
+
+    subgraph uiFolder["ui/"]
+      Editor["editor.tsx"]
+      TabBar["tab-bar.tsx"]
+      Instructions["instructions.tsx"]
+      Timeline["timeline.tsx"]
+      Sidebar["sidebar.tsx"]
+      TimeMarkers["time-markers.tsx"]
+      Keyframes["keyframes.tsx"]
+      Playback["playback-controls.tsx"]
+      CodeExport["code-export.tsx"]
+      Tabs["tabs.tsx"]
+      KeyframePanel["keyframe-edit-panel.tsx"]
+      SharedStyles["shared-styles.ts"]
+      Icons["icons.tsx"]
+    end
+  end
+
+  Index --> Editor
+  Editor --> Port
+  Editor --> Keyboard
+  Editor --> TabBar
+  Editor --> Instructions
+  Editor --> Timeline
+  Editor --> KeyframePanel
+
+  Timeline --> Sidebar
+  Timeline --> TimeMarkers
+  Timeline --> Keyframes
+  Timeline --> Playback
+  Timeline --> CodeExport
+
+  CodeExport --> Codegen
+  CodeExport --> Tabs
+  CodeExport --> Icons
+
+  Sidebar --> Icons
+  Sidebar --> SharedStyles
+  TimeMarkers --> SharedStyles
+  Keyframes --> SharedStyles
+  Keyframes --> Icons
+  KeyframePanel --> SharedStyles
+  KeyframePanel --> Icons
+  KeyframePanel --> KeyframeUtils
+  Playback --> Framesync
+  Playback --> Icons
+
+  Port --> Store
+  Keyboard --> Store
+  TabBar --> Store
+  Sidebar --> Store
+  TimeMarkers --> Store
+  Keyframes --> Store
+  Playback --> Store
+  CodeExport --> Store
+  KeyframePanel --> Store
+  Editor --> Store
+
+  Store --> KeyframeUtils
+  Store --> Types
+  KeyframeUtils --> OmitKeys
+  KeyframeUtils --> Types
+  Codegen --> KeyframeUtils
+  Codegen --> Types
+
+  TabBar --> Shallow
+  Timeline --> Shallow
+  Keyframes --> Shallow
+  KeyframePanel --> Shallow
+```
 
 ## Execution flows
 
