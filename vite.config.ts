@@ -7,27 +7,27 @@ import manifest from "./manifest.config.ts";
 const rootDir = import.meta.dirname;
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@": path.resolve(rootDir, "src"),
+    resolve: {
+        alias: {
+            "@": path.resolve(rootDir, "src"),
+        },
     },
-  },
-  plugins: [react(), crx({ manifest })],
-  server: {
-    cors: {
-      origin: [/chrome-extension:\/\//],
+    plugins: [react(), crx({ manifest })],
+    server: {
+        cors: {
+            origin: [/chrome-extension:\/\//],
+        },
+        strictPort: true,
+        port: 5173,
     },
-    strictPort: true,
-    port: 5173,
-  },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    sourcemap: true,
-    rollupOptions: {
-      input: {
-        editor: path.resolve(rootDir, "src/editor/index.html"),
-      },
+    build: {
+        outDir: "dist",
+        emptyOutDir: true,
+        sourcemap: true,
+        rollupOptions: {
+            input: {
+                editor: path.resolve(rootDir, "src/editor/index.html"),
+            },
+        },
     },
-  },
 });
