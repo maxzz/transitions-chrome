@@ -11,17 +11,17 @@ import { Timeline } from "./timeline";
 const getHasAnimations = (state: EditorStore) => state.animations && Object.keys(state.animations).length;
 
 export function Editor() {
-  usePort();
-  useKeyboardShortcuts();
-  const hasAnimations = useEditorState(getHasAnimations);
+    usePort();
+    useKeyboardShortcuts();
+    const hasAnimations = useEditorState(getHasAnimations);
 
-  return (
-    <>
-      <TabBar />
-      <AnimatePresence exitBeforeEnter>
-        {hasAnimations ? <Timeline key="timeline" /> : <Instructions key="instructions" />}
-      </AnimatePresence>
-      <KeyframeEditPanel />
-    </>
-  );
+    return (
+        <>
+            <TabBar />
+            <AnimatePresence exitBeforeEnter>
+                {hasAnimations ? <Timeline key="timeline" /> : <Instructions key="instructions" />}
+            </AnimatePresence>
+            <KeyframeEditPanel />
+        </>
+    );
 }

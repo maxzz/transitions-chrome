@@ -35,39 +35,39 @@ const ActionButtonContainer = styled(motion.button)`
 `;
 
 export function PlaybackControls() {
-  const { playbackOrigin, startPlaying, stopPlaying, scrubTo } = useEditorState(getPlayback);
+    const { playbackOrigin, startPlaying, stopPlaying, scrubTo } = useEditorState(getPlayback);
 
-  useEffect(() => {
-    if (!playbackOrigin) return;
-    const onFrame = ({ timestamp }: { timestamp: number }) => {
-      const delta = timestamp - playbackOrigin.startedAt;
-      scrubTo((playbackOrigin.originTime + delta) / 1000);
-    };
-    framesyncUpdate(onFrame, true);
-    return () => framesyncCancel(onFrame);
-  }, [playbackOrigin, scrubTo]);
+    useEffect(() => {
+        if (!playbackOrigin) return;
+        const onFrame = ({ timestamp }: { timestamp: number; }) => {
+            const delta = timestamp - playbackOrigin.startedAt;
+            scrubTo((playbackOrigin.originTime + delta) / 1000);
+        };
+        framesyncUpdate(onFrame, true);
+        return () => framesyncCancel(onFrame);
+    }, [playbackOrigin, scrubTo]);
 
-  return (
-    <Container onClick={(event) => event.stopPropagation()}>
-      <ActionButtonContainer
-        whileTap={{ scale: 0.85 }}
-        onClick={() => {
-          scrubTo(0);
-          if (playbackOrigin) startPlaying();
-        }}
-      >
-        <SkipBackIcon />
-      </ActionButtonContainer>
-      <ActionButtonContainer whileTap={{ scale: 0.85 }} onClick={playbackOrigin ? stopPlaying : startPlaying}>
-        {playbackOrigin ? <PauseIcon /> : <PlayIcon />}
-      </ActionButtonContainer>
-      <CurrentTime />
-    </Container>
-  );
+    return (
+        <Container onClick={(event) => event.stopPropagation()}>
+            <ActionButtonContainer
+                whileTap={{ scale: 0.85 }}
+                onClick={() => {
+                    scrubTo(0);
+                    if (playbackOrigin) startPlaying();
+                }}
+            >
+                <SkipBackIcon />
+            </ActionButtonContainer>
+            <ActionButtonContainer whileTap={{ scale: 0.85 }} onClick={playbackOrigin ? stopPlaying : startPlaying}>
+                {playbackOrigin ? <PauseIcon /> : <PlayIcon />}
+            </ActionButtonContainer>
+            <CurrentTime />
+        </Container>
+    );
 }
 
 function CurrentTime() {
-  const currentAnimation = useEditorState(getSelectedAnimation);
-  if (!currentAnimation) return null;
-  return <span style={{ fontVariantNumeric: "tabular-nums" }}>{currentAnimation.currentTime.toFixed(2)}</span>;
+    const currentAnimation = useEditorState(getSelectedAnimation);
+    if (!currentAnimation) return null;
+    return <span style={{ fontVariantNumeric: "tabular-nums" }}>{currentAnimation.currentTime.toFixed(2)}</span>;
 }

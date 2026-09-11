@@ -17,25 +17,25 @@ const Button = styled(motion.button)`
 `;
 
 function RecordButton({
-  isRecording,
-  startRecording,
-  stopRecording,
+    isRecording,
+    startRecording,
+    stopRecording,
 }: {
-  isRecording: boolean;
-  startRecording: () => void;
-  stopRecording: () => void;
+    isRecording: boolean;
+    startRecording: () => void;
+    stopRecording: () => void;
 }) {
-  return (
-    <Button onClick={isRecording ? stopRecording : startRecording} whileTap="pressed">
-      <RecordIcon
-        variants={{ pressed: { scale: 0.8 } }}
-        style={{
-          backgroundColor: isRecording ? "var(--red)" : "rgba(255,255,255,0.5)",
-        }}
-      />
-      {isRecording ? "Stop recording" : "Start recording"}
-    </Button>
-  );
+    return (
+        <Button onClick={isRecording ? stopRecording : startRecording} whileTap="pressed">
+            <RecordIcon
+                variants={{ pressed: { scale: 0.8 } }}
+                style={{
+                    backgroundColor: isRecording ? "var(--red)" : "rgba(255,255,255,0.5)",
+                }}
+            />
+            {isRecording ? "Stop recording" : "Start recording"}
+        </Button>
+    );
 }
 
 const Container = styled.section`
@@ -79,43 +79,43 @@ const duration = 0.8;
 const transition = { type: "spring" as const, duration, bounce: 0 };
 
 const getTabBarState = (state: EditorStore) => ({
-  isRecording: state.isRecording,
-  startRecording: state.startRecording,
-  stopRecording: state.stopRecording,
-  animations: state.animations,
-  selectAnimation: state.selectAnimation,
-  selected: state.selectedAnimationName,
+    isRecording: state.isRecording,
+    startRecording: state.startRecording,
+    stopRecording: state.stopRecording,
+    animations: state.animations,
+    selectAnimation: state.selectAnimation,
+    selected: state.selectedAnimationName,
 });
 
 export function TabBar() {
-  const { isRecording, startRecording, stopRecording, animations, selectAnimation, selected } =
-    useEditorState(getTabBarState, shallow);
+    const { isRecording, startRecording, stopRecording, animations, selectAnimation, selected } =
+        useEditorState(getTabBarState, shallow);
 
-  return (
-    <Container>
-      <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecording={stopRecording} />
-      <Tabs layoutScroll>
-        {Object.keys(animations).map((animationName) => (
-          <Tab
-            key={animationName}
-            onClick={() => selectAnimation(animationName)}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={transition}
-          >
-            <motion.span
-              initial={false}
-              animate={{ opacity: animationName === selected ? 1 : 0.65 }}
-              transition={{ duration }}
-            >
-              {animationName}
-            </motion.span>
-            {animationName === selected ? (
-              <Underline layoutId="tab-underline" layoutDependency={animationName === selected} transition={transition} />
-            ) : null}
-          </Tab>
-        ))}
-      </Tabs>
-    </Container>
-  );
+    return (
+        <Container>
+            <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecording={stopRecording} />
+            <Tabs layoutScroll>
+                {Object.keys(animations).map((animationName) => (
+                    <Tab
+                        key={animationName}
+                        onClick={() => selectAnimation(animationName)}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={transition}
+                    >
+                        <motion.span
+                            initial={false}
+                            animate={{ opacity: animationName === selected ? 1 : 0.65 }}
+                            transition={{ duration }}
+                        >
+                            {animationName}
+                        </motion.span>
+                        {animationName === selected ? (
+                            <Underline layoutId="tab-underline" layoutDependency={animationName === selected} transition={transition} />
+                        ) : null}
+                    </Tab>
+                ))}
+            </Tabs>
+        </Container>
+    );
 }

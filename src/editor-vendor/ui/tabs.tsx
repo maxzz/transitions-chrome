@@ -22,27 +22,27 @@ const Tab = styled.li`
 `;
 
 export interface ExportTab {
-  id: string;
-  label: string;
+    id: string;
+    label: string;
 }
 
 export function Tabs({
-  values,
-  selected,
-  onChange,
+    values,
+    selected,
+    onChange,
 }: {
-  values: ExportTab[];
-  selected: string;
-  onChange: (id: string) => void;
+    values: ExportTab[];
+    selected: string;
+    onChange: (id: string) => void;
 }) {
-  return (
-    <Container>
-      {values.map((value) => (
-        <Tab key={value.id} onClick={() => onChange(value.id)}>
-          {value.label}
-          {selected === value.id ? <motion.div className="underline" layoutId="underline" /> : null}
-        </Tab>
-      ))}
-    </Container>
-  );
+    return (
+        <Container>
+            {values.map((value) => (
+                <Tab key={value.id} onClick={() => onChange(value.id)}>
+                    {value.label}
+                    {selected === value.id ? <motion.div className="underline" layoutId="underline" /> : null}
+                </Tab>
+            ))}
+        </Container>
+    );
 }

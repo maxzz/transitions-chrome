@@ -71,17 +71,17 @@ const ValueMarkerContainer = styled.div`
 
 const bufferTime = 1;
 
-function RepeatMarker({ scale, time, repeat }: { scale: number; time: number; repeat: number | string }) {
-  return (
-    <RepeatContainer style={{ transform: `translateX(${time * scale}px)` }}>
-      <TransitionMarker style={{ width: "100%" }} />
-      <GradientMask />
-      <RepeatCount>
-        <RepeatIcon style={{ width: 20, height: 20 }} />
-        {repeat}
-      </RepeatCount>
-    </RepeatContainer>
-  );
+function RepeatMarker({ scale, time, repeat }: { scale: number; time: number; repeat: number | string; }) {
+    return (
+        <RepeatContainer style={{ transform: `translateX(${time * scale}px)` }}>
+            <TransitionMarker style={{ width: "100%" }} />
+            <GradientMask />
+            <RepeatCount>
+                <RepeatIcon style={{ width: 20, height: 20 }} />
+                {repeat}
+            </RepeatCount>
+        </RepeatContainer>
+    );
 }
 
 const getSelectedKeyframes = (state: EditorStore) => state.selectedKeyframes;
@@ -89,131 +89,131 @@ const getSelectKeyframe = (state: EditorStore) => state.selectKeyframe;
 const getAddKeyframe = (state: EditorStore) => state.addKeyframe;
 
 function isKeyframeSelected(selectedKeyframes: KeyframeMetadata[] | undefined, keyframeId: string) {
-  return selectedKeyframes?.some((keyframe) => keyframe.id === keyframeId) ?? false;
+    return selectedKeyframes?.some((keyframe) => keyframe.id === keyframeId) ?? false;
 }
 
 function ValueKeyframes({
-  scale,
-  animation,
-  containerRef,
+    scale,
+    animation,
+    containerRef,
 }: {
-  scale: number;
-  animation: ValueAnimationRecord;
-  containerRef: MutableRefObject<HTMLElement | null>;
+    scale: number;
+    animation: ValueAnimationRecord;
+    containerRef: MutableRefObject<HTMLElement | null>;
 }) {
-  const [dragOrigin, setDragOrigin] = useState<DragOrigin | undefined>();
-  const [isDragging, setIsDragging] = useState(false);
-  const selectKeyframe = useEditorState(getSelectKeyframe);
-  const selectedKeyframes = useEditorState(getSelectedKeyframes);
-  const addKeyframe = useEditorState(getAddKeyframe);
-  const moveKeyframe = useEditorState(getMoveKeyframe);
-  const { enableHistory } = useEditorState(getHistory, shallow);
-  const { id, elementId, valueName, keyframes, options } = animation;
-  const { delay = 0, duration = 0.3, repeat } = options;
-  const markers = [];
-  let prevTime: number | undefined;
-  const orderedKeyframes = sortKeyframesByOffset(keyframes);
+    const [dragOrigin, setDragOrigin] = useState<DragOrigin | undefined>();
+    const [isDragging, setIsDragging] = useState(false);
+    const selectKeyframe = useEditorState(getSelectKeyframe);
+    const selectedKeyframes = useEditorState(getSelectedKeyframes);
+    const addKeyframe = useEditorState(getAddKeyframe);
+    const moveKeyframe = useEditorState(getMoveKeyframe);
+    const { enableHistory } = useEditorState(getHistory, shallow);
+    const { id, elementId, valueName, keyframes, options } = animation;
+    const { delay = 0, duration = 0.3, repeat } = options;
+    const markers = [];
+    let prevTime: number | undefined;
+    const orderedKeyframes = sortKeyframesByOffset(keyframes);
 
-  useEffect(() => {
-    document.body.style.cursor = isDragging ? "ew-resize" : "";
-  }, [isDragging]);
+    useEffect(() => {
+        document.body.style.cursor = isDragging ? "ew-resize" : "";
+    }, [isDragging]);
 
-  useEffect(() => {
-    if (!dragOrigin?.keyframeId) return;
+    useEffect(() => {
+        if (!dragOrigin?.keyframeId) return;
 
-    const handleDrag = (event: PointerEvent) => {
-      const deltaX = event.pageX + (containerRef.current?.scrollLeft ?? 0) - dragOrigin.pointerX;
-      const newTime = Math.max(0, dragOrigin.time + deltaX / scale);
-      moveKeyframe(elementId, id, dragOrigin.keyframeId ?? "", newTime);
-      setIsDragging(true);
-    };
-    const stopDrag = () => {
-      enableHistory?.(true);
-      setIsDragging(false);
-      setDragOrigin(undefined);
-    };
-    window.addEventListener("pointermove", handleDrag);
-    window.addEventListener("pointerup", stopDrag);
-    return () => {
-      window.removeEventListener("pointermove", handleDrag);
-      window.removeEventListener("pointerup", stopDrag);
-    };
-  }, [containerRef, dragOrigin, elementId, enableHistory, id, moveKeyframe, scale]);
+        const handleDrag = (event: PointerEvent) => {
+            const deltaX = event.pageX + (containerRef.current?.scrollLeft ?? 0) - dragOrigin.pointerX;
+            const newTime = Math.max(0, dragOrigin.time + deltaX / scale);
+            moveKeyframe(elementId, id, dragOrigin.keyframeId ?? "", newTime);
+            setIsDragging(true);
+        };
+        const stopDrag = () => {
+            enableHistory?.(true);
+            setIsDragging(false);
+            setDragOrigin(undefined);
+        };
+        window.addEventListener("pointermove", handleDrag);
+        window.addEventListener("pointerup", stopDrag);
+        return () => {
+            window.removeEventListener("pointermove", handleDrag);
+            window.removeEventListener("pointerup", stopDrag);
+        };
+    }, [containerRef, dragOrigin, elementId, enableHistory, id, moveKeyframe, scale]);
 
-  for (const { offset, id: keyframeId } of orderedKeyframes) {
-    const time = delay + offset * duration;
-    const keyframeIsSelected = isKeyframeSelected(selectedKeyframes, keyframeId);
-    markers.push(
-      <div key={keyframeId}>
-        {prevTime !== undefined ? (
-          <TransitionMarker
-            initial={false}
-            animate={{
-              backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)",
-            }}
-            transition={{ duration: 0.1 }}
-            style={{
-              width: (time - prevTime) * scale,
-              transform: `translateX(${(prevTime ?? 0) * scale}px)`,
-            }}
-          />
-        ) : null}
-        <ValueMarkerContainer
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-            selectKeyframe({
-              elementName: elementId,
-              valueName,
-              valueId: id,
-              id: keyframeId,
-            });
-            enableHistory?.(false);
-            setDragOrigin({
-              keyframeId,
-              pointerX: event.pageX + (containerRef.current?.scrollLeft ?? 0),
-              time,
-            });
-          }}
-          style={{
-            cursor: isDragging ? "ew-resize" : "pointer",
-            transform: `translateX(${time * scale}px)`,
-          }}
-        >
-          <ValueMarker
-            initial={false}
-            animate={{
-              backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--white)",
-            }}
-            transition={{ duration: 0.1 }}
-            whileTap={{ scale: 0.9 }}
-            style={{ rotate: 45 }}
-          />
-        </ValueMarkerContainer>
-      </div>,
-    );
-    prevTime = time;
-  }
-
-  return (
-    <ValueAnimationContainer
-      style={{ width: (delay + duration + bufferTime) * scale }}
-      onClick={(event) => {
-        event.stopPropagation();
-        addKeyframe(
-          elementId,
-          id,
-          uuid(),
-          (event.pageX + (containerRef.current?.scrollLeft ?? 0) - sidebarWidth - 20) / scale,
+    for (const { offset, id: keyframeId } of orderedKeyframes) {
+        const time = delay + offset * duration;
+        const keyframeIsSelected = isKeyframeSelected(selectedKeyframes, keyframeId);
+        markers.push(
+            <div key={keyframeId}>
+                {prevTime !== undefined ? (
+                    <TransitionMarker
+                        initial={false}
+                        animate={{
+                            backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)",
+                        }}
+                        transition={{ duration: 0.1 }}
+                        style={{
+                            width: (time - prevTime) * scale,
+                            transform: `translateX(${(prevTime ?? 0) * scale}px)`,
+                        }}
+                    />
+                ) : null}
+                <ValueMarkerContainer
+                    onClick={(event) => {
+                        event.stopPropagation();
+                    }}
+                    onPointerDown={(event) => {
+                        event.stopPropagation();
+                        selectKeyframe({
+                            elementName: elementId,
+                            valueName,
+                            valueId: id,
+                            id: keyframeId,
+                        });
+                        enableHistory?.(false);
+                        setDragOrigin({
+                            keyframeId,
+                            pointerX: event.pageX + (containerRef.current?.scrollLeft ?? 0),
+                            time,
+                        });
+                    }}
+                    style={{
+                        cursor: isDragging ? "ew-resize" : "pointer",
+                        transform: `translateX(${time * scale}px)`,
+                    }}
+                >
+                    <ValueMarker
+                        initial={false}
+                        animate={{
+                            backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--white)",
+                        }}
+                        transition={{ duration: 0.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        style={{ rotate: 45 }}
+                    />
+                </ValueMarkerContainer>
+            </div>,
         );
-      }}
-    >
-      {markers}
-      {repeat ? <RepeatMarker repeat={repeat} time={prevTime || 0} scale={scale} /> : null}
-    </ValueAnimationContainer>
-  );
+        prevTime = time;
+    }
+
+    return (
+        <ValueAnimationContainer
+            style={{ width: (delay + duration + bufferTime) * scale }}
+            onClick={(event) => {
+                event.stopPropagation();
+                addKeyframe(
+                    elementId,
+                    id,
+                    uuid(),
+                    (event.pageX + (containerRef.current?.scrollLeft ?? 0) - sidebarWidth - 20) / scale,
+                );
+            }}
+        >
+            {markers}
+            {repeat ? <RepeatMarker repeat={repeat} time={prevTime || 0} scale={scale} /> : null}
+        </ValueAnimationContainer>
+    );
 }
 
 const ElementAnimationContainer = styled.ul`
@@ -226,27 +226,27 @@ const ElementAnimationContainer = styled.ul`
 `;
 
 export function Keyframes({
-  animation,
-  containerRef,
+    animation,
+    containerRef,
 }: {
-  animation: AnimationMetadata;
-  containerRef: MutableRefObject<HTMLElement | null>;
+    animation: AnimationMetadata;
+    containerRef: MutableRefObject<HTMLElement | null>;
 }) {
-  const { elements } = animation;
-  const elementAnimations = [];
-  const scale = useEditorState(getTimeScale);
+    const { elements } = animation;
+    const elementAnimations = [];
+    const scale = useEditorState(getTimeScale);
 
-  for (const elementName in elements) {
-    const valueAnimations = [];
-    for (const valueAnimation of elements[elementName] ?? []) {
-      valueAnimations.push(
-        <ValueKeyframes key={valueAnimation.id} containerRef={containerRef} scale={scale} animation={valueAnimation} />,
-      );
+    for (const elementName in elements) {
+        const valueAnimations = [];
+        for (const valueAnimation of elements[elementName] ?? []) {
+            valueAnimations.push(
+                <ValueKeyframes key={valueAnimation.id} containerRef={containerRef} scale={scale} animation={valueAnimation} />,
+            );
+        }
+        elementAnimations.push(
+            <ElementAnimationContainer key={elementName}>{valueAnimations}</ElementAnimationContainer>,
+        );
     }
-    elementAnimations.push(
-      <ElementAnimationContainer key={elementName}>{valueAnimations}</ElementAnimationContainer>,
-    );
-  }
 
-  return <div>{elementAnimations}</div>;
+    return <div>{elementAnimations}</div>;
 }

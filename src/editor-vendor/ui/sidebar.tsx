@@ -6,7 +6,7 @@ import { AddIcon, CodeExportIcon, InspectIcon } from "./icons";
 import { ActionButton, SidebarContainer } from "./shared-styles";
 
 function inspect(motionId: string) {
-  chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => {});
+    chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
 }
 
 const Header = styled.header`
@@ -34,23 +34,23 @@ const ActionsContainer = styled.div`
 
 const getAddValue = (state: EditorStore) => state.addValue;
 
-function ElementDetails({ name }: { name: string }) {
-  const addValue = useEditorState(getAddValue);
-  return (
-    <Header>
-      <h2>
-        <code>{name}</code>
-      </h2>
-      <ActionsContainer>
-        <button type="button" onClick={() => addValue(name, uuid())}>
-          <AddIcon style={{ opacity: 0.7, width: 16, height: 16, stroke: "var(--white)" }} />
-        </button>
-        <button type="button" onClick={() => inspect(name)}>
-          <InspectIcon style={{ opacity: 0.7, width: 13, height: 13, fill: "var(--white)" }} />
-        </button>
-      </ActionsContainer>
-    </Header>
-  );
+function ElementDetails({ name }: { name: string; }) {
+    const addValue = useEditorState(getAddValue);
+    return (
+        <Header>
+            <h2>
+                <code>{name}</code>
+            </h2>
+            <ActionsContainer>
+                <button type="button" onClick={() => addValue(name, uuid())}>
+                    <AddIcon style={{ opacity: 0.7, width: 16, height: 16, stroke: "var(--white)" }} />
+                </button>
+                <button type="button" onClick={() => inspect(name)}>
+                    <InspectIcon style={{ opacity: 0.7, width: 13, height: 13, fill: "var(--white)" }} />
+                </button>
+            </ActionsContainer>
+        </Header>
+    );
 }
 
 const Container = styled(SidebarContainer)`
@@ -111,49 +111,49 @@ const CodeExportButton = styled(ActionButton)`
 const getRenameValue = (state: EditorStore) => state.renameValue;
 
 function ExportButton() {
-  const setIsExportOpen = useEditorState(getSetIsExportOpen);
-  return (
-    <CodeExportButton type="button" onClick={() => setIsExportOpen(true)}>
-      <CodeExportIcon /> Export
-    </CodeExportButton>
-  );
+    const setIsExportOpen = useEditorState(getSetIsExportOpen);
+    return (
+        <CodeExportButton type="button" onClick={() => setIsExportOpen(true)}>
+            <CodeExportIcon /> Export
+        </CodeExportButton>
+    );
 }
 
-export function Sidebar({ animation }: { animation: AnimationMetadata }) {
-  const { elements } = animation;
-  const children = [];
-  const renameValue = useEditorState(getRenameValue);
+export function Sidebar({ animation }: { animation: AnimationMetadata; }) {
+    const { elements } = animation;
+    const children = [];
+    const renameValue = useEditorState(getRenameValue);
 
-  for (const elementName in elements) {
-    const elementChildren = [];
-    const elementAnimations = animation.elements[elementName] ?? [];
-    for (const { valueName, id } of elementAnimations) {
-      elementChildren.push(
-        <li key={id}>
-          <ValueName
-            className="code"
-            value={valueName}
-            placeholder="Enter value name"
-            autoFocus={valueName === ""}
-            onChange={(event) => {
-              renameValue(elementName, id, event.currentTarget.value);
-            }}
-          />
-        </li>,
-      );
+    for (const elementName in elements) {
+        const elementChildren = [];
+        const elementAnimations = animation.elements[elementName] ?? [];
+        for (const { valueName, id } of elementAnimations) {
+            elementChildren.push(
+                <li key={id}>
+                    <ValueName
+                        className="code"
+                        value={valueName}
+                        placeholder="Enter value name"
+                        autoFocus={valueName === ""}
+                        onChange={(event) => {
+                            renameValue(elementName, id, event.currentTarget.value);
+                        }}
+                    />
+                </li>,
+            );
+        }
+        children.push(
+            <ul key={elementName}>
+                <ElementDetails name={elementName} />
+                {elementChildren}
+            </ul>,
+        );
     }
-    children.push(
-      <ul key={elementName}>
-        <ElementDetails name={elementName} />
-        {elementChildren}
-      </ul>,
-    );
-  }
 
-  return (
-    <Container>
-      {children}
-      <ExportButton />
-    </Container>
-  );
+    return (
+        <Container>
+            {children}
+            <ExportButton />
+        </Container>
+    );
 }

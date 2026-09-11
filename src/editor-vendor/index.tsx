@@ -3,5 +3,5 @@ import { Editor } from "./ui/editor";
 
 const rootNode = document.getElementById("app");
 if (rootNode) {
-  render(<Editor />, rootNode);
+    render(<Editor />, rootNode);
 }
