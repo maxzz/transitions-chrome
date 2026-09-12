@@ -6,11 +6,11 @@ interface IconProps {
     style?: CSSProperties;
 }
 
-export function RecordIcon(props: HTMLMotionProps<"div">) {
+export function RecordIcon(props: HTMLMotionProps<"span">) {
     return (
         <>
             {/* RecordIcon */}
-            <motion.div className="size-3.5 rounded-full bg-white/50" {...props} />
+            <motion.span className="inline-block size-3.5 rounded-full bg-white/50" {...props} />
         </>
     );
 }
