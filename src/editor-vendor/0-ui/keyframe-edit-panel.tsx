@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import styled from "styled-components";
 import { Leva, LevaInputs, useControls } from "leva";
 import { bezier } from "@leva-ui/plugin-bezier";
 import { shallow } from "../utils/shallow";
@@ -14,7 +13,6 @@ import {
 } from "../state/store";
 import type { EditorStore, KeyframeData, KeyframeMetadata } from "../types";
 import { TrashIcon } from "./8-icons";
-import { ActionButton, SidebarContainer, ValueMarker } from "./shared-styles";
 
 const opacity = (initialValue: unknown) => ({
     value: parseFloat(String(initialValue)),
@@ -32,14 +30,6 @@ function getControlDefinition(name: string, value: unknown) {
     const config = factory ? factory(value) : { value };
     return { ...config, label: name, transient: true };
 }
-
-const ActionsContainer = styled.div`
-  padding: 20px 0px;
-  display: flex;
-  flex-direction: column;
-`;
-
-const DeleteButton = styled(ActionButton)``;
 
 function KeyframeSettings({
     keyframe,
@@ -116,12 +106,20 @@ function KeyframeSettings({
     }, [easing, index, keyframeId, set]);
 
     return (
-        <ActionsContainer>
-            <DeleteButton type="button" onClick={() => deleteKeyframe(keyframeMetadata)}>
-                <TrashIcon />
-                Delete keyframe
-            </DeleteButton>
-        </ActionsContainer>
+        <>
+            {/* ActionsContainer */}
+            <div className="flex flex-col py-5">
+                {/* DeleteButton */}
+                <button
+                    type="button"
+                    className="flex items-center justify-center rounded-[5px] border border-feint px-3.75 py-2.5 text-(--white) [&_svg]:mr-1.25 [&_svg]:size-4 [&_svg]:text-(--red)"
+                    onClick={() => deleteKeyframe(keyframeMetadata)}
+                >
+                    <TrashIcon />
+                    Delete keyframe
+                </button>
+            </div>
+        </>
     );
 }
 
@@ -168,43 +166,25 @@ const theme = {
     },
 };
 
-const Container = styled(SidebarContainer)`
-  position: fixed;
-  top: var(--tab-bar-height);
-  right: 0;
-  bottom: 0;
-  width: 300px;
-  padding: 5px 10px;
-  z-index: 10;
-  border: none;
-  border-left: 1px solid var(--feint);
-
-  h2 {
-    margin-bottom: 20px;
-    font-size: 12px;
-  }
-
-  ${ValueMarker} {
-    display: inline-block;
-    position: static;
-    margin-right: 6px;
-    background-color: var(--strong-blue);
-    transform: translateY(3px) rotate(45deg);
-  }
-`;
-
 const getSelectedKeyframes = (state: EditorStore) => state.selectedKeyframes;
 
 export function KeyframeEditPanel() {
     const selectedKeyframes = useEditorState(getSelectedKeyframes);
     return (
-        <Container style={{ display: selectedKeyframes ? "block" : "none" }}>
-            <h2>
-                <ValueMarker style={{ background: "var(--strong-blue)" }} />
-                Edit keyframe
-            </h2>
-            <Leva fill theme={theme} flat titleBar={false} hideCopyButton />
-            {selectedKeyframes ? <KeyframeEditControls selectedKeyframes={selectedKeyframes} /> : null}
-        </Container>
+        <>
+            {/* Container */}
+            <section
+                className="fixed top-(--tab-bar-height) right-0 bottom-0 z-10 w-75 border-0 border-l border-feint bg-transparent bg-[radial-gradient(rgba(0,0,0,0)_1px,var(--background)_1px)] bg-size-[4px_4px] px-2.5 py-1.25 backdrop-blur-[3px]"
+                style={{ display: selectedKeyframes ? "block" : "none" }}
+            >
+                <h2 className="mb-5 text-xs">
+                    {/* ValueMarker */}
+                    <div className="mr-1.5 inline-block size-4 translate-y-0.75 rotate-45 rounded-[5px] border-[3px] border-(--black) bg-strong-blue" />
+                    Edit keyframe
+                </h2>
+                <Leva fill theme={theme} flat titleBar={false} hideCopyButton />
+                {selectedKeyframes ? <KeyframeEditControls selectedKeyframes={selectedKeyframes} /> : null}
+            </section>
+        </>
     );
 }
