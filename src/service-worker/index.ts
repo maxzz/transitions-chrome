@@ -1,7 +1,78 @@
 import type { DevToolsToBackgroundMessage, ExtensionMessage } from "@/shared/messages";
+import { getPageBridgeFile, getPageClientFile } from "@/context/page-client-file";
 
+const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
 const clientConnections = new Map<number, Map<number, chrome.runtime.Port>>();
+
+function pageClientFile() {
+    return getPageClientFile();
+}
+
+async function registerPageClient() {
+    if (!chrome.scripting?.registerContentScripts) return;
+    try {
+        await chrome.scripting.unregisterContentScripts({
+            ids: [PAGE_CLIENT_SCRIPT_ID, "transitions-chrome-page-bridge"],
+        });
+    } catch {
+        // Not registered yet.
+    }
+    try {
+        await chrome.scripting.registerContentScripts([
+            {
+                id: PAGE_CLIENT_SCRIPT_ID,
+                js: [pageClientFile()],
+                matches: ["http://*/*", "https://*/*", "file:///*"],
+                allFrames: true,
+                runAt: "document_start",
+                world: "MAIN",
+                persistAcrossSessions: true,
+            },
+            {
+                id: "transitions-chrome-page-bridge",
+                js: [getPageBridgeFile()],
+                matches: ["http://*/*", "https://*/*", "file:///*"],
+                allFrames: true,
+                runAt: "document_start",
+                world: "ISOLATED",
+                persistAcrossSessions: true,
+            },
+        ]);
+    } catch (error) {
+        console.error("Failed to register page client", error);
+    }
+}
+
+function injectIntoTab(
+    tabId: number,
+    file: string,
+    world: "MAIN" | "ISOLATED",
+    frameId?: number,
+) {
+    if (!chrome.scripting?.executeScript) return;
+    const target: chrome.scripting.InjectionTarget =
+        typeof frameId === "number"
+            ? { tabId, frameIds: [frameId] }
+            : { tabId, allFrames: true };
+    chrome.scripting
+        .executeScript({
+            target,
+            files: [file],
+            world,
+            injectImmediately: true,
+        })
+        .catch(() => {
+            // chrome://, Web Store, and other restricted pages reject injection.
+        });
+}
+
+function injectPageClient(tabId: number, frameId?: number) {
+    injectIntoTab(tabId, pageClientFile(), "MAIN", frameId);
+    injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId);
+}
+
+registerPageClient();
 
 function getClientConnections(tabId: number) {
     let connections = clientConnections.get(tabId);
@@ -46,6 +117,16 @@ function handleClientPort(port: chrome.runtime.Port, manualTabId?: number) {
             const tabConnections = clientConnections.get(tabId) ?? new Map();
             clientConnections.set(tabId, tabConnections);
             tabConnections.set(frameId, port);
+
+            const devToolsPort = devToolsConnections.get(tabId);
+            if (devToolsPort) {
+                // The open panel is the source of truth; it re-sends isrecording.
+                // Do not apply stale storage here — that turns recording off while
+                // the UI still shows it on, and wipes in-flight load animations.
+                devToolsPort.postMessage({ type: "clientready" });
+                return;
+            }
+
             chrome.storage.sync.get("recordingTabs", ({ recordingTabs = {} }) => {
                 sendMessageToClient({
                     type: "isrecording",
@@ -68,6 +149,7 @@ function handleDevToolsPort(port: chrome.runtime.Port) {
         switch (message.type) {
             case "init": {
                 devToolsConnections.set(message.tabId, port);
+                injectPageClient(message.tabId);
                 return;
             }
             case "isrecording": {
@@ -113,9 +195,11 @@ function handleNewConnections(port: chrome.runtime.Port, manualTabId?: number) {
 }
 
 function clearTimelineOnReload(event: chrome.webNavigation.WebNavigationTransitionCallbackDetails) {
+    if (event.frameId !== 0) return;
     const devToolsPort = devToolsConnections.get(event.tabId);
     if (devToolsPort) {
         devToolsPort.postMessage({ type: "clear" });
+        injectPageClient(event.tabId, event.frameId);
     }
 }
 

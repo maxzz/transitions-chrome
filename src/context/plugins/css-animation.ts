@@ -1,19 +1,10 @@
 import type { RecordPlugin, ValueAnimationDraft } from "@/shared/types";
 import { store } from "../store";
 import { time } from "../runtime/utils";
+import { markAnimationRecorded } from "./recorded-animations";
 
-function getAnimationsFromAnimationEvent({
-    target,
-    animationName,
-}: AnimationEvent): ValueAnimationDraft[] | undefined {
-    if (!target) return;
-    const element = target as Element;
-    const elementAnimations = element.getAnimations();
-    const cssAnimation = elementAnimations.find(
-        (animation): animation is CSSAnimation =>
-            "animationName" in animation && animation.animationName === animationName,
-    );
-    if (!cssAnimation?.effect || !("getComputedTiming" in cssAnimation.effect)) return;
+export function recordCssAnimation(cssAnimation: CSSAnimation, target: Element): boolean {
+    if (!cssAnimation.effect || !("getComputedTiming" in cssAnimation.effect)) return false;
 
     const animationTiming = (cssAnimation.effect as KeyframeEffect).getComputedTiming();
     const duration = time.s(Number(animationTiming.duration) || 0);
@@ -47,23 +38,38 @@ function getAnimationsFromAnimationEvent({
         }
     }
 
-    return Object.values(valueAnimations);
+    const drafts = Object.values(valueAnimations);
+    if (!drafts.length) return false;
+    drafts.forEach(({ valueName, keyframes, options }) => {
+        store.getState().recordAnimation(target, valueName, keyframes, options, "css-animation");
+    });
+    return true;
+}
+
+function getAnimationFromEvent({ target, animationName }: AnimationEvent): CSSAnimation | undefined {
+    if (!target) return;
+    return (target as Element).getAnimations().find(
+        (animation): animation is CSSAnimation =>
+            "animationName" in animation && animation.animationName === animationName,
+    );
 }
 
 function record(event: AnimationEvent) {
-    const animations = getAnimationsFromAnimationEvent(event);
-    if (!animations) return;
-    animations.forEach(({ valueName, keyframes, options }) => {
-        store.getState().recordAnimation(event.target as Element, valueName, keyframes, options, "css-animation");
-    });
+    const run = () => {
+        const animation = getAnimationFromEvent(event);
+        if (!animation || !event.target) return false;
+        markAnimationRecorded(animation);
+        return recordCssAnimation(animation, event.target as Element);
+    };
+    if (!run()) requestAnimationFrame(run);
 }
 
 export const cssAnimation: RecordPlugin = {
     id: "css-animation",
     onRecordStart: () => {
-        window.addEventListener("animationstart", record);
+        window.addEventListener("animationstart", record, true);
     },
     onRecordEnd: () => {
-        window.removeEventListener("animationstart", record);
+        window.removeEventListener("animationstart", record, true);
     },
 };

@@ -2,6 +2,7 @@ import type { AnimationStartMessage } from "@/shared/messages";
 import { cssAnimation } from "./plugins/css-animation";
 import { cssTransition } from "./plugins/css-transition";
 import { motionOne } from "./plugins/motion-one";
+import { startAnimationScan } from "./plugins/scan-animations";
 import { store } from "./store";
 
 const plugins = [cssTransition, cssAnimation, motionOne];
@@ -43,4 +44,5 @@ export function handleRecordedAnimations() {
 
     store.subscribe((state) => state.isRecording, setIsRecording);
     setIsRecording(true);
+    startAnimationScan();
 }

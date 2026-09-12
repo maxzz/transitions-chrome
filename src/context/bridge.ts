@@ -1,13 +1,35 @@
-import clientScript from "./client?script&iife";
 import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/shared/messages";
 import { isExtensionMessage } from "@/shared/messages";
+import { getPageClientFile } from "./page-client-file";
 
 window.__MOTION_BRIDGE_HAS_LOADED = true;
 
-const script = document.createElement("script");
-script.src = chrome.runtime.getURL(clientScript);
-document.documentElement.appendChild(script);
-script.parentNode?.removeChild(script);
+function injectPageClient() {
+    const url = chrome.runtime.getURL(getPageClientFile());
+
+    try {
+        const request = new XMLHttpRequest();
+        request.open("GET", url, false);
+        request.send();
+        if (request.status === 200 && request.responseText) {
+            const script = document.createElement("script");
+            script.textContent = request.responseText;
+            (document.head ?? document.documentElement).appendChild(script);
+            script.remove();
+            return;
+        }
+    } catch {
+        // Page CSP can block inline scripts; fall back to a file URL.
+    }
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.async = false;
+    (document.head ?? document.documentElement).appendChild(script);
+    script.addEventListener("load", () => script.remove());
+}
+
+injectPageClient();
 
 let backgroundPort: chrome.runtime.Port | undefined;
 
@@ -56,3 +78,4 @@ const handleMessagesFromWebPage = (event: MessageEvent) => {
 };
 
 window.addEventListener("message", handleMessagesFromWebPage, false);
+window.postMessage({ type: "requestclientready" }, "*");

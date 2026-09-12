@@ -8,6 +8,7 @@ import {
     getSelectedAnimationName,
     useEditorState,
 } from "../state/store";
+import { injectClientIntoInspectedPage } from "./inject-client";
 
 function useEditAnimation(port?: chrome.runtime.Port) {
     const selectedAnimationName = useEditorState(getSelectedAnimationName);
@@ -49,6 +50,14 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
                     return;
                 case "clear":
                     clear();
+                    return;
+                case "clientready":
+                    injectClientIntoInspectedPage();
+                    port.postMessage({
+                        type: "isrecording",
+                        isRecording: getIsRecording(useEditorState.getState()),
+                        tabId: chrome.devtools.inspectedWindow.tabId,
+                    });
             }
         };
         port.onMessage.addListener(listener);
@@ -71,14 +80,27 @@ export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
     useEffect(() => {
         if (port) return;
+        const tabId = chrome?.devtools?.inspectedWindow?.tabId;
+        if (typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
+            return;
+        }
         const nextPort = chrome.runtime.connect({ name: "devtools-page" });
         nextPort.postMessage({
             type: "init",
-            tabId: chrome.devtools.inspectedWindow.tabId,
+            tabId,
         });
         nextPort.onDisconnect.addListener(() => setPort(undefined));
         setPort(nextPort);
+        injectClientIntoInspectedPage();
     }, [port]);
+
+    useEffect(() => {
+        const onNavigated = chrome?.devtools?.network?.onNavigated;
+        if (!onNavigated) return;
+        const listener = () => injectClientIntoInspectedPage();
+        onNavigated.addListener(listener);
+        return () => onNavigated.removeListener(listener);
+    }, []);
     useIncomingMessages(port);
     useIsRecording(port);
     useEditAnimation(port);

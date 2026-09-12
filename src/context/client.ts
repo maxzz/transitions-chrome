@@ -3,15 +3,20 @@ import { handleMessages } from "./messages";
 import { handleRecordedAnimations } from "./recording";
 
 /**
- * Page-world client. The isolated bridge injects this file as an IIFE so it
- * can see CSS/Motion animations on the page and set __MOTION_DEV_TOOLS_RECORD.
+ * Page-world client. This file is bundled as a classic IIFE and injected into
+ * the inspected page (MAIN world) so it can see CSS/Motion animations and set
+ * __MOTION_DEV_TOOLS_RECORD. Do not use chrome.* here.
  */
+
+function announceReady() {
+    window.postMessage({ type: "clientready" }, "*");
+}
 
 function createDevToolsClient() {
     handleRecordedAnimations();
     handleInspectedAnimation();
-    handleMessages();
-    window.postMessage({ type: "clientready" }, "*");
+    handleMessages(announceReady);
+    announceReady();
 }
 
 if (!window.__MOTION_DEV_TOOLS) {

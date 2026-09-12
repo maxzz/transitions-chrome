@@ -55,7 +55,7 @@ export type DevToolsToBackgroundMessage =
     | InspectAnimationMessage
     | ScrubAnimationMessage;
 
-export type ClientToDevToolsMessage = AnimationStartMessage | ClearMessage;
+export type ClientToDevToolsMessage = AnimationStartMessage | ClearMessage | ClientReadyMessage;
 
 export type ExtensionMessage =
     | PageToBackgroundMessage
