@@ -44,12 +44,7 @@ const Curtain = styled(motion.div)`
   z-index: 1000;
 `;
 
-const getTimelineState = ({
-    animations,
-    selectedAnimationName,
-    deselectKeyframes,
-    isExportOpen,
-}: EditorStore) => ({
+const getTimelineState = ({ animations, selectedAnimationName, deselectKeyframes, isExportOpen, }: EditorStore) => ({
     animations,
     selectedAnimationName,
     deselectKeyframes,
@@ -59,26 +54,29 @@ const getTimelineState = ({
 export function Timeline() {
     const ref = useRef<HTMLDivElement | null>(null);
     const [measureRef, rect] = useMeasure();
-    const { animations, selectedAnimationName, deselectKeyframes, isExportOpen } = useEditorState(
-        getTimelineState,
-        shallow,
-    );
 
-    if (!selectedAnimationName) return null;
+    const { animations, selectedAnimationName, deselectKeyframes, isExportOpen } = useEditorState(getTimelineState, shallow);
+    if (!selectedAnimationName) {
+        return null;}
     const selectedAnimation = animations[selectedAnimationName];
-    if (!selectedAnimation) return null;
+    if (!selectedAnimation) {
+        return null;
+    }
 
     return (
         <Container ref={ref}>
             <Content ref={measureRef} key={selectedAnimationName}>
                 <Sidebar animation={selectedAnimation} />
+
                 <Visualisation onClick={deselectKeyframes}>
                     <TimeMarkers containerRef={ref} timelineRect={rect} currentTime={selectedAnimation.currentTime} />
                     <Keyframes containerRef={ref} animation={selectedAnimation} />
                     <PlaybackControls />
                 </Visualisation>
             </Content>
+
             <AnimatePresence>{isExportOpen ? <CodeExport /> : null}</AnimatePresence>
+            
             <Curtain
                 initial={{ opacity: 1 }}
                 animate={{

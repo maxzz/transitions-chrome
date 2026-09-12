@@ -26,7 +26,10 @@ export function Instructions() {
     return (
         <Container exit={{ scale: 0.925, opacity: 0 }} transition={{ duration: 0.15, ease: "linear" }}>
             <p>
-                While recording <RecordIconContainer><RecordIcon /></RecordIconContainer> is active, interact
+                While recording
+                <RecordIconContainer>
+                    <RecordIcon />
+                </RecordIconContainer> is active, interact
                 with or reload the page to inspect animations.
             </p>
         </Container>

@@ -147,6 +147,7 @@ export function CodeExport() {
     const setIsEditorOpen = useEditorState(getSetIsExportOpen);
     const selectedAnimation = useEditorState(getSelectedAnimation);
     const [exportType, setExportType] = useState(getSource(selectedAnimation));
+
     const code = useMemo(
         () => (selectedAnimation ? (codeGenerators[exportType]?.(selectedAnimation) ?? "") : ""),
         [selectedAnimation, exportType],
@@ -156,35 +157,28 @@ export function CodeExport() {
         <LayoutGroup>
             <Overlay initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.4 } }} exit={{ opacity: 0, transition: { duration: 0.2 } }}>
                 <Modal
-                    initial={{ scale: 0.85 }}
-                    animate={{
-                        scale: 1,
-                        transition: { type: "spring", duration: 0.5, bounce: 0.2 },
-                    }}
-                    exit={{ scale: 0.95, transition: { duration: 0.2 } }}
                     layout
+                    initial={{ scale: 0.85 }}
+                    animate={{ scale: 1, transition: { type: "spring", duration: 0.5, bounce: 0.2 } }}
+                    exit={{ scale: 0.95, transition: { duration: 0.2 } }}
                 >
                     <motion.div layout="position">
                         <h1>
                             Export <span>Beta</span>
                         </h1>
+
                         <LayoutGroup id="code-export">
                             <Tabs values={tabs} selected={exportType} onChange={(id) => setExportType(id as AnimationSource)} />
                         </LayoutGroup>
+
                         <CodeContainer layout layoutScroll>
                             <motion.pre layout="position">
                                 <AnimatePresence initial={false} exitBeforeEnter>
                                     <motion.code
                                         key={code}
                                         initial={{ opacity: 0 }}
-                                        animate={{
-                                            opacity: 1,
-                                            transition: { duration: 0.3, ease: "linear" },
-                                        }}
-                                        exit={{
-                                            opacity: 0,
-                                            transition: { duration: 0.1, ease: "linear" },
-                                        }}
+                                        animate={{ opacity: 1, transition: { duration: 0.3, ease: "linear" } }}
+                                        exit={{ opacity: 0, transition: { duration: 0.1, ease: "linear" } }}
                                         dangerouslySetInnerHTML={{
                                             __html: hljs.highlight(code, {
                                                 language: exportType.startsWith("css") ? "css" : "javascript",
@@ -194,7 +188,9 @@ export function CodeExport() {
                                 </AnimatePresence>
                             </motion.pre>
                         </CodeContainer>
+
                     </motion.div>
+                    
                     <CloseButton layout onClick={() => setIsEditorOpen(false)}>
                         <CloseIcon />
                     </CloseButton>
