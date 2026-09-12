@@ -1,7 +1,12 @@
 import type { RecordPlugin, ValueAnimationDraft } from "@/shared/types";
 import { store } from "../store";
-import { time } from "../runtime/utils";
+import { getEasingPoints, time } from "../runtime/utils";
 import { markAnimationRecorded } from "./recorded-animations";
+
+function recordKeyframeEasing(easing: string | undefined) {
+    if (!easing) return easing;
+    return easing.startsWith("cubic-bezier") ? getEasingPoints(easing) : easing;
+}
 
 export function recordCssAnimation(cssAnimation: CSSAnimation, target: Element): boolean {
     if (!cssAnimation.effect || !("getComputedTiming" in cssAnimation.effect)) return false;
@@ -31,7 +36,7 @@ export function recordCssAnimation(cssAnimation: CSSAnimation, target: Element):
             }
             const { keyframes, options } = valueAnimations[valueName];
             if (keyframes.length && Array.isArray(options.easing)) {
-                options.easing.push(easing);
+                options.easing.push(recordKeyframeEasing(easing));
             }
             options.offset?.push(offset ?? 0);
             keyframes.push(values[valueName as keyof typeof values]);

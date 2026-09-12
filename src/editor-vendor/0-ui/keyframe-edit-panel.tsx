@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Leva, LevaInputs, useControls } from "leva";
 import { bezier } from "@leva-ui/plugin-bezier";
 import { shallow } from "../utils/shallow";
-import { sortKeyframesByOffset } from "../state/keyframe-utils";
+import { sortKeyframesByOffset, toBezierHandles } from "../state/keyframe-utils";
 import {
     getDeleteKeyframe,
     getHistory,
@@ -60,21 +60,22 @@ function KeyframeSettings({
     };
 
     if (index !== 0) {
-        if (typeof easing === "string" && easing.startsWith("steps")) {
-            controls[`${keyframeId} easing freeform`] = {
-                value: easing,
+        const handles = toBezierHandles(easing);
+        if (handles) {
+            controls[`${keyframeId} easing`] = {
+                ...bezier([handles[0], handles[1], handles[2], handles[3]]),
                 label: "Easing",
-                onChange: (newValue: unknown) => {
-                    updateKeyframeEasing(keyframeMetadata, newValue);
+                onChange: (points: number[]) => {
+                    updateKeyframeEasing(keyframeMetadata, Array.from(points).slice(0, 4));
                 },
                 ...historyCallbacks,
             };
         } else {
-            controls[`${keyframeId} easing`] = {
-                ...bezier((Array.isArray(easing) ? [...(easing as number[])] : easing) as never),
+            controls[`${keyframeId} easing freeform`] = {
+                value: typeof easing === "string" ? easing : String(easing ?? ""),
                 label: "Easing",
-                onChange: (points: number[]) => {
-                    updateKeyframeEasing(keyframeMetadata, [...points]);
+                onChange: (newValue: unknown) => {
+                    updateKeyframeEasing(keyframeMetadata, newValue);
                 },
                 ...historyCallbacks,
             };
@@ -93,12 +94,11 @@ function KeyframeSettings({
     useEffect(() => {
         if (index === 0) return;
         try {
-            if (typeof easing === "string" && easing.startsWith("steps")) {
-                set({ [`${keyframeId} easing freeform`]: easing });
+            const handles = toBezierHandles(easing);
+            if (handles) {
+                set({ [`${keyframeId} easing`]: handles });
             } else if (easing !== undefined) {
-                set({
-                    [`${keyframeId} easing`]: Array.isArray(easing) ? [...easing] : easing,
-                });
+                set({ [`${keyframeId} easing freeform`]: typeof easing === "string" ? easing : String(easing) });
             }
         } catch {
             // Leva throws if a control was not registered for this easing shape.

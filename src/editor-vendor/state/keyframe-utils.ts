@@ -9,6 +9,31 @@ export const defaults = {
     easing: "ease",
 };
 
+type BezierHandles = [number, number, number, number];
+
+const namedBezierHandles: Record<string, BezierHandles> = {
+    linear: [0, 0, 1, 1],
+    ease: [0.25, 0.1, 0.25, 1],
+    "ease-in": [0.42, 0, 1, 1],
+    "ease-out": [0, 0, 0.58, 1],
+    "ease-in-out": [0.42, 0, 0.58, 1],
+};
+
+/** Convert a recorded CSS / WAAPI easing into Leva bezier handles, or undefined for freeform. */
+export function toBezierHandles(easing: unknown): BezierHandles | undefined {
+    if (Array.isArray(easing) && easing.length >= 4 && easing.slice(0, 4).every((value) => typeof value === "number" && !Number.isNaN(value))) {
+        return [Number(easing[0]), Number(easing[1]), Number(easing[2]), Number(easing[3])];
+    }
+    if (typeof easing !== "string") return undefined;
+    const named = namedBezierHandles[easing];
+    if (named) return [named[0], named[1], named[2], named[3]];
+    const cubic = easing.match(/^cubic-bezier\(\s*([^)]+)\s*\)$/i);
+    if (!cubic) return undefined;
+    const points = cubic[1].split(",").map((part) => Number.parseFloat(part.trim()));
+    if (points.length !== 4 || points.some((value) => Number.isNaN(value))) return undefined;
+    return [points[0], points[1], points[2], points[3]];
+}
+
 export function compareKeyframeByOffset(a: { offset: number; }, b: { offset: number; }) {
     return a.offset > b.offset ? 1 : -1;
 }

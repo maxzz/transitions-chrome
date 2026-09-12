@@ -18,29 +18,32 @@ async function registerPageClient() {
     } catch {
         // Not registered yet.
     }
-    try {
-        await chrome.scripting.registerContentScripts([
-            {
-                id: PAGE_CLIENT_SCRIPT_ID,
-                js: [pageClientFile()],
-                matches: ["http://*/*", "https://*/*", "file:///*"],
-                allFrames: true,
-                runAt: "document_start",
-                world: "MAIN",
-                persistAcrossSessions: true,
-            },
-            {
-                id: "transitions-chrome-page-bridge",
-                js: [getPageBridgeFile()],
-                matches: ["http://*/*", "https://*/*", "file:///*"],
-                allFrames: true,
-                runAt: "document_start",
-                world: "ISOLATED",
-                persistAcrossSessions: true,
-            },
-        ]);
-    } catch (error) {
-        console.error("Failed to register page client", error);
+    const scripts: chrome.scripting.RegisteredContentScript[] = [
+        {
+            id: PAGE_CLIENT_SCRIPT_ID,
+            js: [pageClientFile()],
+            matches: ["http://*/*", "https://*/*", "file:///*"],
+            allFrames: true,
+            runAt: "document_start",
+            world: "MAIN",
+            persistAcrossSessions: true,
+        },
+        {
+            id: "transitions-chrome-page-bridge",
+            js: [getPageBridgeFile()],
+            matches: ["http://*/*", "https://*/*", "file:///*"],
+            allFrames: true,
+            runAt: "document_start",
+            world: "ISOLATED",
+            persistAcrossSessions: true,
+        },
+    ];
+    for (const script of scripts) {
+        try {
+            await chrome.scripting.registerContentScripts([script]);
+        } catch (error) {
+            console.error("Failed to register page client", error);
+        }
     }
 }
 
@@ -55,7 +58,7 @@ function injectIntoTab(
         typeof frameId === "number"
             ? { tabId, frameIds: [frameId] }
             : { tabId, allFrames: true };
-    chrome.scripting
+    return chrome.scripting
         .executeScript({
             target,
             files: [file],
@@ -68,20 +71,18 @@ function injectIntoTab(
 }
 
 function injectPageClient(tabId: number, frameId?: number) {
-    injectIntoTab(tabId, pageClientFile(), "MAIN", frameId);
-    injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId);
+    return Promise.all([
+        injectIntoTab(tabId, pageClientFile(), "MAIN", frameId),
+        injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId),
+    ]);
 }
 
 registerPageClient();
 
 function getClientConnections(tabId: number) {
     let connections = clientConnections.get(tabId);
-    if (!connections || !connections.size) {
+    if (!connections) {
         connections = new Map();
-        const port = chrome.tabs.connect(tabId, { name: "client" });
-        handleNewConnections(port, tabId);
-        port.onDisconnect.addListener(() => console.log("port disconnected"));
-        connections.set(0, port);
         clientConnections.set(tabId, connections);
     }
     return connections;
@@ -89,6 +90,12 @@ function getClientConnections(tabId: number) {
 
 function sendMessageToClient(message: ExtensionMessage & { tabId: number; }, retry = true) {
     const tabConnections = getClientConnections(message.tabId);
+    if (!tabConnections.size) {
+        if (retry) {
+            setTimeout(() => sendMessageToClient(message, false), 50);
+        }
+        return;
+    }
     try {
         tabConnections.forEach((connection) => {
             connection.postMessage(message);
