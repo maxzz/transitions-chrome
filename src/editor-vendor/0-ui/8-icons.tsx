@@ -1,17 +1,19 @@
 import type { CSSProperties } from "react";
-import styled from "styled-components";
+import type { HTMLMotionProps } from "framer-motion";
 import { motion } from "framer-motion";
 
 interface IconProps {
     style?: CSSProperties;
 }
 
-export const RecordIcon = styled(motion.div)`
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
-`;
+export function RecordIcon(props: HTMLMotionProps<"div">) {
+    return (
+        <>
+            {/* RecordIcon */}
+            <motion.div className="size-3.5 rounded-full bg-white/50" {...props} />
+        </>
+    );
+}
 
 export function AddIcon({ style }: IconProps) {
     return (
