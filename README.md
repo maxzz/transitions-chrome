@@ -43,7 +43,7 @@ Animation libraries expose different timing models, easing formats, and element 
 | GSAP | Planned: detect tweens / timelines on the inspected page |
 | react-spring | Planned: detect spring-driven values |
 
-The DevTools panel is the shared timeline. Page detection lives in `src/context/plugins/` so a new library can be added without rewriting the editor.
+The DevTools panel is the shared timeline. Page detection lives in `src/1-context-script/plugins/` so a new library can be added without rewriting the editor.
 
 ## What it does today
 
@@ -64,9 +64,9 @@ Four Chrome worlds cooperate. They never share a JavaScript heap, so they talk t
 
 | Piece | Chrome world | Entry | Job |
 | --- | --- | --- | --- |
-| Service worker | Extension background | `src/service-worker/index.ts` | Owns ports, recording flags in `chrome.storage.sync`, forwards messages, clears the timeline on navigation |
-| Bridge | Isolated content script | `src/context/bridge.ts` | Injects the page client as a classic IIFE and relays `window.postMessage` ↔ background |
-| Client | Page (MAIN) world | `src/context/client.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
+| Service worker | Extension background | `src/2-service-worker/index.ts` | Owns ports, recording flags in `chrome.storage.sync`, forwards messages, clears the timeline on navigation |
+| Bridge | Isolated content script | `src/1-context-script/bridge.ts` | Injects the page client as a classic IIFE and relays `window.postMessage` ↔ background |
+| Client | Page (MAIN) world | `src/1-context-script/client.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
 | DevTools page | Extension DevTools | `src/devtools/index.ts` | Registers the **transitions-chrome** panel |
 | Editor | DevTools panel iframe | `src/editor/index.html` → `src/0-editor-ui` | Timeline, recording toggle, export, keyframe editing |
 
@@ -80,10 +80,10 @@ src/
     types.ts
     messages.ts
 
-  service-worker/         Manifest V3 background worker
+  2-service-worker/       Manifest V3 background worker
     index.ts
 
-  context/                Scripts that run against the inspected page
+  1-context-script/       Scripts that run against the inspected page
     bridge.ts             Isolated: inject client, relay messages
     client.ts             Page-world bootstrap
     store.ts              Recording / inspect state (zustand vanilla)
@@ -137,15 +137,15 @@ Shared contracts live in `src/shared` so the service worker, page scripts, and p
 flowchart LR
   subgraph Page["Inspected tab"]
     DOM["Page DOM / CSS / Motion"]
-    Client["context/client.ts<br/>MAIN world IIFE"]
-    Bridge["context/bridge.ts<br/>isolated content script"]
+    Client["1-context-script/client.ts<br/>MAIN world IIFE"]
+    Bridge["1-context-script/bridge.ts<br/>isolated content script"]
     DOM <--> Client
     Client -->|"window.postMessage"| Bridge
     Bridge -->|"window.postMessage"| Client
   end
 
   subgraph Extension["Extension process"]
-    SW["service-worker/index.ts"]
+    SW["2-service-worker/index.ts"]
     DT["devtools/index.ts"]
     Editor["0-editor-ui Editor"]
     DT -->|creates panel| Editor
@@ -439,8 +439,8 @@ Keyboard (when no input is focused):
 | What you changed | What to do |
 | --- | --- |
 | Panel UI (`src/0-editor-ui`, `src/editor`) | `pnpm dev` often refreshes the panel; if not, close and reopen DevTools |
-| Page client / bridge (`src/context`) | Reload the **inspected tab** so the content script injects again |
-| Service worker (`src/service-worker`) | **Reload** the extension on `chrome://extensions`, then reopen DevTools |
+| Page client / bridge (`src/1-context-script`) | Reload the **inspected tab** so the content script injects again |
+| Service worker (`src/2-service-worker`) | **Reload** the extension on `chrome://extensions`, then reopen DevTools |
 | `manifest.config.ts` | Reload the extension, then reopen DevTools |
 | After `pnpm build` | Reload the extension so Chrome picks up a new `dist/` |
 
@@ -455,7 +455,7 @@ You opened `src/editor/index.html` or the Vite URL in a normal tab. Load the unp
 Recording is off; the page did not run a CSS or Motion One animation; or the client did not inject (reload the tab after enabling the extension). Hard-refresh the page with DevTools open.
 
 **Motion for React / GSAP / react-spring animations are missing**  
-Only CSS and Motion One are wired in `src/context/plugins/`. Add a plugin there and register it in `src/context/recording.ts`.
+Only CSS and Motion One are wired in `src/1-context-script/plugins/`. Add a plugin there and register it in `src/1-context-script/recording.ts`.
 
 **Two Motion panels**  
 Disable the store “Motion DevTools” extension if both are installed. This project’s tab is labeled **transitions-chrome**.

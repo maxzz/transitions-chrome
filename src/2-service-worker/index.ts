@@ -1,5 +1,5 @@
 import type { DevToolsToBackgroundMessage, ExtensionMessage } from "@/shared/messages";
-import { getPageBridgeFile, getPageClientFile } from "@/context/page-client-file";
+import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-file";
 
 const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
 const devToolsConnections = new Map<number, chrome.runtime.Port>();

@@ -8,7 +8,7 @@ export default defineManifest({
     permissions: ["storage", "webNavigation", "scripting"],
     host_permissions: ["file:///*", "http://*/*", "https://*/*"],
     background: {
-        service_worker: "src/service-worker/index.ts",
+        service_worker: "src/2-service-worker/index.ts",
         type: "module",
     },
     devtools_page: "src/devtools/index.html",
