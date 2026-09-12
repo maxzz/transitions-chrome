@@ -54,7 +54,7 @@ The DevTools panel is the shared timeline. Page detection lives in `src/context/
 - Exports the selected animation as Motion One, CSS animation, or CSS transition
 - Clears the timeline when the inspected tab reloads
 
-The panel UI is TypeScript under `src/editor-vendor` and still runs **React 17.0.2** (same major version as the original bundle). React will be upgraded later.
+The panel UI is TypeScript under `src/0-editor-ui` and still runs **React 17.0.2** (same major version as the original bundle). React will be upgraded later.
 
 ## Application structure
 
@@ -68,7 +68,7 @@ Four Chrome worlds cooperate. They never share a JavaScript heap, so they talk t
 | Bridge | Isolated content script | `src/context/bridge.ts` | Injects the page client as a classic IIFE and relays `window.postMessage` ↔ background |
 | Client | Page (MAIN) world | `src/context/client.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
 | DevTools page | Extension DevTools | `src/devtools/index.ts` | Registers the **transitions-chrome** panel |
-| Editor | DevTools panel iframe | `src/editor/index.html` → `src/editor-vendor` | Timeline, recording toggle, export, keyframe editing |
+| Editor | DevTools panel iframe | `src/editor/index.html` → `src/0-editor-ui` | Timeline, recording toggle, export, keyframe editing |
 
 The client **must** stay a classic IIFE (`?script&iife`). An ES module in the page world cannot reliably hook CSS / Motion on arbitrary sites.
 
@@ -110,7 +110,7 @@ src/
     main.ts
     styles.css
 
-  editor-vendor/          Typed panel UI (React 17)
+  0-editor-ui/            Typed panel UI (React 17)
     index.tsx             ReactDOM.render(<Editor />, #app)
     types.ts
     state/                Editor store, undo, keyframe helpers
@@ -147,7 +147,7 @@ flowchart LR
   subgraph Extension["Extension process"]
     SW["service-worker/index.ts"]
     DT["devtools/index.ts"]
-    Editor["editor-vendor Editor"]
+    Editor["0-editor-ui Editor"]
     DT -->|creates panel| Editor
   end
 
@@ -244,7 +244,7 @@ The page client also posts `animationstart` through `chrome.runtime.sendMessage`
 
 ## Editor structure
 
-`src/editor-vendor` is the DevTools panel application: a TypeScript port of the original `editor.bundle.js` UI, still on **React 17**. `src/editor/main.ts` imports it after fonts and CSS; `index.tsx` mounts `<Editor />` into `#app` with `ReactDOM.render`.
+`src/0-editor-ui` is the DevTools panel application: a TypeScript port of the original `editor.bundle.js` UI, still on **React 17**. `src/editor/main.ts` imports it after fonts and CSS; `index.tsx` mounts `<Editor />` into `#app` with `ReactDOM.render`.
 
 Folders split by job, not by file size:
 
@@ -261,7 +261,7 @@ Folders split by job, not by file size:
 
 ```mermaid
 flowchart TB
-  subgraph editorVendor["src/editor-vendor"]
+  subgraph editorUi["src/0-editor-ui"]
     Index["index.tsx"]
     Types["types.ts"]
 
@@ -438,7 +438,7 @@ Keyboard (when no input is focused):
 
 | What you changed | What to do |
 | --- | --- |
-| Panel UI (`src/editor-vendor`, `src/editor`) | `pnpm dev` often refreshes the panel; if not, close and reopen DevTools |
+| Panel UI (`src/0-editor-ui`, `src/editor`) | `pnpm dev` often refreshes the panel; if not, close and reopen DevTools |
 | Page client / bridge (`src/context`) | Reload the **inspected tab** so the content script injects again |
 | Service worker (`src/service-worker`) | **Reload** the extension on `chrome://extensions`, then reopen DevTools |
 | `manifest.config.ts` | Reload the extension, then reopen DevTools |
