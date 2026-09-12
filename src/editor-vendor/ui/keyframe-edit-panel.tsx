@@ -13,7 +13,7 @@ import {
     useEditorState,
 } from "../state/store";
 import type { EditorStore, KeyframeData, KeyframeMetadata } from "../types";
-import { TrashIcon } from "./icons";
+import { TrashIcon } from "./8-icons";
 import { ActionButton, SidebarContainer, ValueMarker } from "./shared-styles";
 
 const opacity = (initialValue: unknown) => ({

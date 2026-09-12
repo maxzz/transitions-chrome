@@ -7,7 +7,7 @@ import javascript from "highlight.js/lib/languages/javascript";
 import { generateCSSAnimationCode, generateCSSTransitionCode, generateMotionOneCode } from "../export/codegen";
 import { getSelectedAnimation, getSetIsExportOpen, useEditorState } from "../state/store";
 import type { AnimationMetadata, AnimationSource } from "../types";
-import { CloseIcon } from "./icons";
+import { CloseIcon } from "./8-icons";
 import { Tabs } from "./tabs";
 
 hljs.registerLanguage("css", css);
@@ -190,7 +190,7 @@ export function CodeExport() {
                         </CodeContainer>
 
                     </motion.div>
-                    
+
                     <CloseButton layout onClick={() => setIsEditorOpen(false)}>
                         <CloseIcon />
                     </CloseButton>

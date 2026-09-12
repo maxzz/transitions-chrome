@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import styled from "styled-components";
 import { getSetIsExportOpen, useEditorState } from "../state/store";
 import type { AnimationMetadata, EditorStore } from "../types";
-import { AddIcon, CodeExportIcon, InspectIcon } from "./icons";
+import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
 import { ActionButton, SidebarContainer } from "./shared-styles";
 
 function inspect(motionId: string) {

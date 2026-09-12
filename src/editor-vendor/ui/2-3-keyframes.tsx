@@ -7,7 +7,7 @@ import { shallow } from "../lib/shallow";
 import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
 import type { AnimationMetadata, DragOrigin, EditorStore, KeyframeMetadata, ValueAnimationRecord } from "../types";
-import { RepeatIcon } from "./icons";
+import { RepeatIcon } from "./8-icons";
 import { sidebarWidth, ValueMarker } from "./shared-styles";
 
 const TransitionMarker = styled(motion.div)`

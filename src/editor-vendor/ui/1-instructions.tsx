@@ -1,6 +1,20 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { RecordIcon } from "./icons";
+import { RecordIcon } from "./8-icons";
+
+export function Instructions() {
+    return (
+        <Container exit={{ scale: 0.925, opacity: 0 }} transition={{ duration: 0.15, ease: "linear" }}>
+            <p>
+                While recording
+                <RecordIconContainer>
+                    <RecordIcon />
+                </RecordIconContainer> is active, interact
+                with or reload the page to inspect animations.
+            </p>
+        </Container>
+    );
+}
 
 const Container = styled(motion.div)`
   flex: 1;
@@ -21,17 +35,3 @@ const RecordIconContainer = styled.div`
   transform: translateY(3px);
   fill: var(--red);
 `;
-
-export function Instructions() {
-    return (
-        <Container exit={{ scale: 0.925, opacity: 0 }} transition={{ duration: 0.15, ease: "linear" }}>
-            <p>
-                While recording
-                <RecordIconContainer>
-                    <RecordIcon />
-                </RecordIconContainer> is active, interact
-                with or reload the page to inspect animations.
-            </p>
-        </Container>
-    );
-}

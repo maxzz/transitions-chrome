@@ -1,16 +1,68 @@
 import { useRef } from "react";
-import styled from "styled-components";
-import { AnimatePresence, motion } from "framer-motion";
 import useMeasure from "react-use-measure";
+import { AnimatePresence, motion } from "framer-motion";
 import { shallow } from "../lib/shallow";
-import { useEditorState } from "../state/store";
-import type { EditorStore } from "../types";
-import { CodeExport } from "./code-export";
-import { Keyframes } from "./keyframes";
-import { PlaybackControls } from "./playback-controls";
-import { Sidebar } from "./sidebar";
+
+import styled from "styled-components";
 import { sidebarWidth } from "./shared-styles";
-import { TimeMarkers } from "./time-markers";
+
+import { useEditorState } from "../state/store";
+
+import { type EditorStore } from "../types";
+import { Sidebar } from "./2-1-sidebar";
+import { TimeMarkers } from "./2-2-time-markers";
+import { Keyframes } from "./2-3-keyframes";
+import { PlaybackControls } from "./2-4-playback-controls";
+import { CodeExport } from "./7-code-export";
+
+export function Timeline() {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const [measureRef, rect] = useMeasure();
+
+    const { animations, selectedAnimationName, deselectKeyframes, isExportOpen } = useEditorState(getTimelineState, shallow);
+    if (!selectedAnimationName) {
+        return null;
+    }
+    const selectedAnimation = animations[selectedAnimationName];
+    if (!selectedAnimation) {
+        return null;
+    }
+
+    return (
+        <Container ref={ref}>
+            <Content ref={measureRef} key={selectedAnimationName}>
+                <Sidebar animation={selectedAnimation} />
+
+                <Visualisation onClick={deselectKeyframes}>
+                    <TimeMarkers containerRef={ref} timelineRect={rect} currentTime={selectedAnimation.currentTime} />
+                    <Keyframes containerRef={ref} animation={selectedAnimation} />
+                    <PlaybackControls />
+                </Visualisation>
+            </Content>
+
+            <AnimatePresence>{isExportOpen ? <CodeExport /> : null}</AnimatePresence>
+
+            <Curtain
+                initial={{ opacity: 1 }}
+                animate={{
+                    opacity: 0,
+                    transition: { ease: "linear", duration: 0.5 },
+                    transitionEnd: { display: "none" },
+                }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            />
+        </Container>
+    );
+}
+
+function getTimelineState({ animations, selectedAnimationName, deselectKeyframes, isExportOpen, }: EditorStore) {
+    return ({
+        animations,
+        selectedAnimationName,
+        deselectKeyframes,
+        isExportOpen,
+    });
+}
 
 const Container = styled(motion.main)`
   display: flex;
@@ -43,49 +95,3 @@ const Curtain = styled(motion.div)`
   pointer-events: none;
   z-index: 1000;
 `;
-
-const getTimelineState = ({ animations, selectedAnimationName, deselectKeyframes, isExportOpen, }: EditorStore) => ({
-    animations,
-    selectedAnimationName,
-    deselectKeyframes,
-    isExportOpen,
-});
-
-export function Timeline() {
-    const ref = useRef<HTMLDivElement | null>(null);
-    const [measureRef, rect] = useMeasure();
-
-    const { animations, selectedAnimationName, deselectKeyframes, isExportOpen } = useEditorState(getTimelineState, shallow);
-    if (!selectedAnimationName) {
-        return null;}
-    const selectedAnimation = animations[selectedAnimationName];
-    if (!selectedAnimation) {
-        return null;
-    }
-
-    return (
-        <Container ref={ref}>
-            <Content ref={measureRef} key={selectedAnimationName}>
-                <Sidebar animation={selectedAnimation} />
-
-                <Visualisation onClick={deselectKeyframes}>
-                    <TimeMarkers containerRef={ref} timelineRect={rect} currentTime={selectedAnimation.currentTime} />
-                    <Keyframes containerRef={ref} animation={selectedAnimation} />
-                    <PlaybackControls />
-                </Visualisation>
-            </Content>
-
-            <AnimatePresence>{isExportOpen ? <CodeExport /> : null}</AnimatePresence>
-            
-            <Curtain
-                initial={{ opacity: 1 }}
-                animate={{
-                    opacity: 0,
-                    transition: { ease: "linear", duration: 0.5 },
-                    transitionEnd: { display: "none" },
-                }}
-                exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            />
-        </Container>
-    );
-}
