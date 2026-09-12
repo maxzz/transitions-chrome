@@ -1,0 +1,54 @@
+/**
+ * Isolated-world relay. Bundled as a classic IIFE so CRXJS does not wrap it
+ * in a Vite/HMR loader (that loader injects webcomponents and trips CSP).
+ */
+(function () {
+    if (window.__MOTION_BRIDGE_HAS_LOADED) return;
+    window.__MOTION_BRIDGE_HAS_LOADED = true;
+
+    var backgroundPort;
+
+    function bindPortListeners(port) {
+        backgroundPort = port;
+
+        port.onMessage.addListener(function (backgroundMessage) {
+            switch (backgroundMessage.type) {
+                case "tabId":
+                    return;
+                case "isrecording":
+                case "inspectanimation":
+                case "scrubanimation":
+                    window.postMessage(backgroundMessage, "*");
+            }
+        });
+
+        port.onDisconnect.addListener(function () {
+            backgroundPort = undefined;
+        });
+    }
+
+    function connect() {
+        bindPortListeners(chrome.runtime.connect({ name: "client" }));
+    }
+
+    connect();
+    chrome.runtime.onConnect.addListener(bindPortListeners);
+
+    window.addEventListener(
+        "message",
+        function (event) {
+            if (event.source !== window) return;
+            var data = event.data;
+            if (!data || typeof data !== "object" || typeof data.type !== "string") return;
+
+            if (!backgroundPort) connect();
+
+            if (data.type === "animationstart" || data.type === "clientready") {
+                if (backgroundPort) backgroundPort.postMessage(data);
+            }
+        },
+        false,
+    );
+
+    window.postMessage({ type: "requestclientready" }, "*");
+})();

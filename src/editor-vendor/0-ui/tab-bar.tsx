@@ -14,13 +14,19 @@ function RecordButton({
     startRecording: () => void;
     stopRecording: () => void;
 }) {
+    const label = isRecording ? "Recording — click to stop" : "Not recording — click to start";
+
     return (
         <>
             {/* Button */}
             <motion.button
-                className="relative flex h-(--tab-bar-height) w-(--tab-bar-height) shrink-0 items-center justify-center -indent-250"
+                type="button"
+                className="group relative flex h-(--tab-bar-height) w-(--tab-bar-height) shrink-0 items-center justify-center"
                 onClick={isRecording ? stopRecording : startRecording}
                 whileTap="pressed"
+                title={label}
+                aria-label={label}
+                aria-pressed={isRecording}
             >
                 <RecordIcon
                     variants={{ pressed: { scale: 0.8 } }}
@@ -28,7 +34,9 @@ function RecordButton({
                         backgroundColor: isRecording ? "var(--red)" : "rgba(255,255,255,0.5)",
                     }}
                 />
-                {isRecording ? "Stop recording" : "Start recording"}
+                <span className="pointer-events-none absolute top-1/2 left-full z-20 ml-2 -translate-y-1/2 rounded-md border border-feint bg-feint-solid px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    {isRecording ? "Recording" : "Not recording"}
+                </span>
             </motion.button>
         </>
     );
@@ -53,7 +61,7 @@ export function TabBar() {
     return (
         <>
             {/* Container */}
-            <section className="flex h-(--tab-bar-height) shrink-0 border-b border-feint">
+            <section className="relative z-20 flex h-(--tab-bar-height) shrink-0 overflow-visible border-b border-feint">
                 <RecordButton isRecording={isRecording} startRecording={startRecording} stopRecording={stopRecording} />
                 {/* Tabs */}
                 <motion.ul className="flex flex-1 justify-start overflow-y-hidden [overflow-x:overlay]" layoutScroll>

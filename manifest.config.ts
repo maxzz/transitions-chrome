@@ -11,15 +11,6 @@ export default defineManifest({
         service_worker: "src/service-worker/index.ts",
         type: "module",
     },
-    content_scripts: [
-        {
-            all_frames: true,
-            js: ["src/context/bridge.ts"],
-            matches: ["<all_urls>"],
-            run_at: "document_start",
-            world: "ISOLATED",
-        },
-    ],
     devtools_page: "src/devtools/index.html",
     externally_connectable: {
         matches: ["https://*.motion.dev/*", "*://localhost/*"],

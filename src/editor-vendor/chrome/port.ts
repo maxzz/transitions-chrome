@@ -8,6 +8,7 @@ import {
     getSelectedAnimationName,
     useEditorState,
 } from "../state/store";
+import { injectClientIntoInspectedPage } from "./inject-client";
 
 function useEditAnimation(port?: chrome.runtime.Port) {
     const selectedAnimationName = useEditorState(getSelectedAnimationName);
@@ -51,6 +52,7 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
                     clear();
                     return;
                 case "clientready":
+                    injectClientIntoInspectedPage();
                     port.postMessage({
                         type: "isrecording",
                         isRecording: getIsRecording(useEditorState.getState()),
@@ -89,7 +91,16 @@ export function usePort() {
         });
         nextPort.onDisconnect.addListener(() => setPort(undefined));
         setPort(nextPort);
+        injectClientIntoInspectedPage();
     }, [port]);
+
+    useEffect(() => {
+        const onNavigated = chrome?.devtools?.network?.onNavigated;
+        if (!onNavigated) return;
+        const listener = () => injectClientIntoInspectedPage();
+        onNavigated.addListener(listener);
+        return () => onNavigated.removeListener(listener);
+    }, []);
     useIncomingMessages(port);
     useIsRecording(port);
     useEditAnimation(port);

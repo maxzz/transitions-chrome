@@ -1,5 +1,5 @@
 import type { DevToolsToBackgroundMessage, ExtensionMessage } from "@/shared/messages";
-import { getPageClientFile } from "@/context/page-client-file";
+import { getPageBridgeFile, getPageClientFile } from "@/context/page-client-file";
 
 const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
@@ -12,7 +12,9 @@ function pageClientFile() {
 async function registerPageClient() {
     if (!chrome.scripting?.registerContentScripts) return;
     try {
-        await chrome.scripting.unregisterContentScripts({ ids: [PAGE_CLIENT_SCRIPT_ID] });
+        await chrome.scripting.unregisterContentScripts({
+            ids: [PAGE_CLIENT_SCRIPT_ID, "transitions-chrome-page-bridge"],
+        });
     } catch {
         // Not registered yet.
     }
@@ -27,13 +29,27 @@ async function registerPageClient() {
                 world: "MAIN",
                 persistAcrossSessions: true,
             },
+            {
+                id: "transitions-chrome-page-bridge",
+                js: [getPageBridgeFile()],
+                matches: ["http://*/*", "https://*/*", "file:///*"],
+                allFrames: true,
+                runAt: "document_start",
+                world: "ISOLATED",
+                persistAcrossSessions: true,
+            },
         ]);
     } catch (error) {
         console.error("Failed to register page client", error);
     }
 }
 
-function injectPageClient(tabId: number, frameId?: number) {
+function injectIntoTab(
+    tabId: number,
+    file: string,
+    world: "MAIN" | "ISOLATED",
+    frameId?: number,
+) {
     if (!chrome.scripting?.executeScript) return;
     const target: chrome.scripting.InjectionTarget =
         typeof frameId === "number"
@@ -42,13 +58,18 @@ function injectPageClient(tabId: number, frameId?: number) {
     chrome.scripting
         .executeScript({
             target,
-            files: [pageClientFile()],
-            world: "MAIN",
+            files: [file],
+            world,
             injectImmediately: true,
         })
         .catch(() => {
             // chrome://, Web Store, and other restricted pages reject injection.
         });
+}
+
+function injectPageClient(tabId: number, frameId?: number) {
+    injectIntoTab(tabId, pageClientFile(), "MAIN", frameId);
+    injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId);
 }
 
 registerPageClient();
