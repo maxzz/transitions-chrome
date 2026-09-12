@@ -7,7 +7,7 @@ import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
 import type { AnimationMetadata, DragOrigin, EditorStore, KeyframeMetadata, ValueAnimationRecord } from "../types";
 import { RepeatIcon } from "./8-icons";
-import { sidebarWidth, ValueMarker } from "./shared-styles";
+import { sidebarWidth, ValueMarker } from "./shared-styles.tsx";
 
 const bufferTime = 1;
 
