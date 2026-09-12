@@ -16,10 +16,9 @@ export function Instructions() {
                 is on, trigger a CSS or Motion One animation in the inspected tab.
             </p>
             <p className="max-w-140 text-white/55">
-                This panel does not play a demo. Hover, click, or reload a page that already animates.
-                With the dev server running, open{" "}
-                <span className="font-mono text-white/80">http://localhost:5173/playground.html</span>
-                {" "}in the tab behind DevTools.
+                Works on any inspected tab — hover, click, or reload to trigger CSS or Motion One.
+                A known-good test page is{" "}
+                <span className="font-mono text-white/80">http://localhost:5173/playground.html</span>.
             </p>
             <p className="max-w-140 text-white/40">
                 Framer Motion, GSAP, and react-spring are not recorded yet.

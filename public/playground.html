@@ -143,9 +143,10 @@
     <main>
       <h1>transitions-chrome playground</h1>
       <p class="intro">
-        Open DevTools → <code>transitions-chrome</code>, leave recording on, then use the controls below.
-        Reload this tab to recapture the entrance animation.
+        Open DevTools on this tab → <code>transitions-chrome</code>, leave recording on, then hover, click, or reload.
+        Detection is not limited to this page — any inspected tab with CSS or Motion One should record.
       </p>
+      <p class="intro" id="probe">Checking page client…</p>
       <div class="grid">
         <section class="card">
           <h2>CSS animation on load</h2>
@@ -170,6 +171,17 @@
         const on = toggle.classList.toggle("is-on");
         toggle.textContent = on ? "On" : "Off";
       });
+
+      const probe = document.getElementById("probe");
+      const renderProbe = () => {
+        probe.textContent = window.__MOTION_DEV_TOOLS
+          ? "Page client is injected. Leave recording on, then hover / click / reload."
+          : "Page client is not injected. Reload the extension on chrome://extensions, then reload this tab.";
+      };
+      renderProbe();
+      setTimeout(renderProbe, 50);
+      setTimeout(renderProbe, 300);
+      setTimeout(renderProbe, 1000);
     </script>
   </body>
 </html>

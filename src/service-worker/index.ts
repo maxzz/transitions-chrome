@@ -1,7 +1,57 @@
 import type { DevToolsToBackgroundMessage, ExtensionMessage } from "@/shared/messages";
+import { getPageClientFile } from "@/context/page-client-file";
 
+const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
 const clientConnections = new Map<number, Map<number, chrome.runtime.Port>>();
+
+function pageClientFile() {
+    return getPageClientFile();
+}
+
+async function registerPageClient() {
+    if (!chrome.scripting?.registerContentScripts) return;
+    try {
+        await chrome.scripting.unregisterContentScripts({ ids: [PAGE_CLIENT_SCRIPT_ID] });
+    } catch {
+        // Not registered yet.
+    }
+    try {
+        await chrome.scripting.registerContentScripts([
+            {
+                id: PAGE_CLIENT_SCRIPT_ID,
+                js: [pageClientFile()],
+                matches: ["http://*/*", "https://*/*", "file:///*"],
+                allFrames: true,
+                runAt: "document_start",
+                world: "MAIN",
+                persistAcrossSessions: true,
+            },
+        ]);
+    } catch (error) {
+        console.error("Failed to register page client", error);
+    }
+}
+
+function injectPageClient(tabId: number, frameId?: number) {
+    if (!chrome.scripting?.executeScript) return;
+    const target: chrome.scripting.InjectionTarget =
+        typeof frameId === "number"
+            ? { tabId, frameIds: [frameId] }
+            : { tabId, allFrames: true };
+    chrome.scripting
+        .executeScript({
+            target,
+            files: [pageClientFile()],
+            world: "MAIN",
+            injectImmediately: true,
+        })
+        .catch(() => {
+            // chrome://, Web Store, and other restricted pages reject injection.
+        });
+}
+
+registerPageClient();
 
 function getClientConnections(tabId: number) {
     let connections = clientConnections.get(tabId);
@@ -78,6 +128,7 @@ function handleDevToolsPort(port: chrome.runtime.Port) {
         switch (message.type) {
             case "init": {
                 devToolsConnections.set(message.tabId, port);
+                injectPageClient(message.tabId);
                 return;
             }
             case "isrecording": {
@@ -127,6 +178,7 @@ function clearTimelineOnReload(event: chrome.webNavigation.WebNavigationTransiti
     const devToolsPort = devToolsConnections.get(event.tabId);
     if (devToolsPort) {
         devToolsPort.postMessage({ type: "clear" });
+        injectPageClient(event.tabId, event.frameId);
     }
 }
 
