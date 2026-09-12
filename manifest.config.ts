@@ -32,11 +32,7 @@ export default defineManifest({
     web_accessible_resources: [
         {
             matches: ["https://*/*", "http://*/*", "file:///*"],
-            resources: [
-                "src/editor/index.html",
-                "src/context/client.js",
-                "src/context/client.js.map",
-            ],
+            resources: ["src/editor/index.html"],
         },
     ],
 });
