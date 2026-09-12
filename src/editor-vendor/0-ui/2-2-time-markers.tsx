@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MutableRefObject } from "react";
 import { getPlayback, getTimeScale, useEditorState } from "../state/store";
 import type { DragOrigin, EditorStore } from "../types";
-import { scrubberHalfWidth, sidebarWidth } from "./shared-styles.tsx";
+import { scrubberHalfWidth, sidebarWidth } from "./shared-components";
 
 function ScrubberIcon() {
     return (

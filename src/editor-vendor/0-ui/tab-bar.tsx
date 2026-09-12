@@ -4,7 +4,7 @@ import { shallow } from "../utils/shallow";
 import { useEditorState } from "../state/store";
 import type { EditorStore } from "../types";
 import { RecordIcon } from "./8-icons";
-import { tabBarHeight } from "./shared-styles.tsx";
+import { tabBarHeight } from "./shared-components";
 
 const Button = styled(motion.button)`
   height: ${tabBarHeight}px;
