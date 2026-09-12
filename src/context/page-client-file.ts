@@ -1,5 +1,4 @@
 import clientScript from "./client?script&iife";
-import bridgeScript from "./page-bridge.js?script&iife";
 
 function toExtensionFile(id: string) {
     return String(id).replace(/^\//, "");
@@ -10,7 +9,7 @@ export function getPageClientFile() {
     return toExtensionFile(clientScript);
 }
 
-/** Extension-relative path to the isolated-world bridge IIFE. */
+/** Static isolated-world bridge copied from /public. */
 export function getPageBridgeFile() {
-    return toExtensionFile(bridgeScript);
+    return "page-bridge.js";
 }

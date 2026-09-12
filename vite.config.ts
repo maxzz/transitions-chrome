@@ -14,12 +14,20 @@ export default defineConfig({
         },
     },
     plugins: [tailwindcss(), react(), crx({ manifest })],
+    define: {
+        LIVE_RELOAD: "true",
+    },
     server: {
         cors: {
             origin: [/chrome-extension:\/\//],
         },
         strictPort: true,
         port: 5173,
+        hmr: {
+            host: "localhost",
+            protocol: "ws",
+            clientPort: 5173,
+        },
     },
     build: {
         outDir: "dist",

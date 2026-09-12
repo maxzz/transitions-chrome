@@ -1,6 +1,7 @@
 /**
- * Isolated-world relay. Bundled as a classic IIFE so CRXJS does not wrap it
- * in a Vite/HMR loader (that loader injects webcomponents and trips CSP).
+ * Isolated-world relay. Copied as a static extension file so Chrome can
+ * register/inject it without a CRXJS IIFE virtual path (those break
+ * chrome.scripting.registerContentScripts in dev).
  */
 (function () {
     if (window.__MOTION_BRIDGE_HAS_LOADED) return;
