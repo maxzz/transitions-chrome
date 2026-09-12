@@ -1,38 +1,10 @@
 import { useEffect } from "react";
-import styled from "styled-components";
 import { motion } from "framer-motion";
 import { framesyncCancel, framesyncUpdate } from "../utils/framesync";
 import { getPlayback, getSelectedAnimation, useEditorState } from "../state/store";
 import { PauseIcon, PlayIcon, SkipBackIcon } from "./8-icons";
 
-const Container = styled.div`
-  background-color: var(--feint);
-  position: fixed;
-  bottom: 10px;
-  left: calc(var(--sidebar-width) + 10px);
-  border-radius: 20px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  z-index: 4;
-  backdrop-filter: blur(4px);
-
-  span {
-    display: block;
-    font-weight: bold;
-  }
-`;
-
-const ActionButtonContainer = styled(motion.button)`
-  padding: 0;
-  margin-right: 8px;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    fill: var(--white);
-  }
-`;
+const actionButtonClassName = "mr-2 p-0 [&_svg]:size-4 [&_svg]:fill-(--white)";
 
 export function PlaybackControls() {
     const { playbackOrigin, startPlaying, stopPlaying, scrubTo } = useEditorState(getPlayback);
@@ -48,21 +20,30 @@ export function PlaybackControls() {
     }, [playbackOrigin, scrubTo]);
 
     return (
-        <Container onClick={(event) => event.stopPropagation()}>
-            <ActionButtonContainer
-                whileTap={{ scale: 0.85 }}
-                onClick={() => {
-                    scrubTo(0);
-                    if (playbackOrigin) startPlaying();
-                }}
+        <>
+            {/* Container */}
+            <div
+                className="fixed bottom-2.5 left-[calc(var(--sidebar-width)+10px)] z-4 flex items-center rounded-[20px] bg-feint px-3 py-2 backdrop-blur-xs [&_span]:block [&_span]:font-bold"
+                onClick={(event) => event.stopPropagation()}
             >
-                <SkipBackIcon />
-            </ActionButtonContainer>
-            <ActionButtonContainer whileTap={{ scale: 0.85 }} onClick={playbackOrigin ? stopPlaying : startPlaying}>
-                {playbackOrigin ? <PauseIcon /> : <PlayIcon />}
-            </ActionButtonContainer>
-            <CurrentTime />
-        </Container>
+                {/* ActionButtonContainer */}
+                <motion.button
+                    className={actionButtonClassName}
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => {
+                        scrubTo(0);
+                        if (playbackOrigin) startPlaying();
+                    }}
+                >
+                    <SkipBackIcon />
+                </motion.button>
+                {/* ActionButtonContainer */}
+                <motion.button className={actionButtonClassName} whileTap={{ scale: 0.85 }} onClick={playbackOrigin ? stopPlaying : startPlaying}>
+                    {playbackOrigin ? <PauseIcon /> : <PlayIcon />}
+                </motion.button>
+                <CurrentTime />
+            </div>
+        </>
     );
 }
 
