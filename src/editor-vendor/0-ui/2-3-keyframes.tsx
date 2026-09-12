@@ -1,86 +1,32 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 import { v4 as uuid } from "uuid";
-import styled from "styled-components";
 import { motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
 import type { AnimationMetadata, DragOrigin, EditorStore, KeyframeMetadata, ValueAnimationRecord } from "../types";
 import { RepeatIcon } from "./8-icons";
-import { sidebarWidth, ValueMarker } from "./shared-styles";
-
-const TransitionMarker = styled(motion.div)`
-  position: absolute;
-  top: calc(50% - 1px);
-  left: 0;
-  height: 2px;
-  background-color: var(--feint);
-  border-radius: 2px;
-`;
-
-const RepeatContainer = styled.div`
-  width: 200px;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-`;
-
-const GradientMask = styled.div`
-  background: linear-gradient(to left, var(--background), var(--background-transparent));
-  position: absolute;
-  inset: 0;
-`;
-
-const RepeatCount = styled.code`
-  display: flex;
-  align-items: center;
-  position: absolute;
-  top: 50%;
-  left: 50px;
-  transform: translateY(-50%);
-  font-weight: bold;
-  font-size: 12px;
-  border-radius: 5px;
-  padding: 2px 5px;
-  background: var(--feint-solid);
-  color: rgba(255, 255, 255, 0.4);
-
-  svg {
-    margin-right: 4px;
-    fill: rgba(255, 255, 255, 0.4);
-  }
-`;
-
-const ValueAnimationContainer = styled.li`
-  display: flex;
-  position: relative;
-  height: var(--row-height);
-`;
-
-const ValueMarkerContainer = styled.div`
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  z-index: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-`;
+import { sidebarWidth, ValueMarker } from "./shared-components";
 
 const bufferTime = 1;
 
 function RepeatMarker({ scale, time, repeat }: { scale: number; time: number; repeat: number | string; }) {
     return (
-        <RepeatContainer style={{ transform: `translateX(${time * scale}px)` }}>
-            <TransitionMarker style={{ width: "100%" }} />
-            <GradientMask />
-            <RepeatCount>
-                <RepeatIcon style={{ width: 20, height: 20 }} />
-                {repeat}
-            </RepeatCount>
-        </RepeatContainer>
+        <>
+            {/* RepeatContainer */}
+            <div className="absolute top-0 bottom-0 w-50" style={{ transform: `translateX(${time * scale}px)` }}>
+                {/* TransitionMarker */}
+                <motion.div className="absolute top-[calc(50%-1px)] left-0 h-0.5 w-full rounded-xs bg-feint" />
+                {/* GradientMask */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_left,var(--background),var(--background-transparent))]" />
+                {/* RepeatCount */}
+                <code className="absolute top-1/2 left-12.5 flex -translate-y-1/2 items-center rounded-[5px] bg-feint-solid px-1.25 py-0.5 text-xs font-bold text-white/40 [&_svg]:mr-1 [&_svg]:fill-white/40">
+                    <RepeatIcon style={{ width: 20, height: 20 }} />
+                    {repeat}
+                </code>
+            </div>
+        </>
     );
 }
 
@@ -146,19 +92,25 @@ function ValueKeyframes({
         markers.push(
             <div key={keyframeId}>
                 {prevTime !== undefined ? (
-                    <TransitionMarker
-                        initial={false}
-                        animate={{
-                            backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)",
-                        }}
-                        transition={{ duration: 0.1 }}
-                        style={{
-                            width: (time - prevTime) * scale,
-                            transform: `translateX(${(prevTime ?? 0) * scale}px)`,
-                        }}
-                    />
+                    <>
+                        {/* TransitionMarker */}
+                        <motion.div
+                            className="absolute top-[calc(50%-1px)] left-0 h-0.5 rounded-xs bg-feint"
+                            initial={false}
+                            animate={{
+                                backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)",
+                            }}
+                            transition={{ duration: 0.1 }}
+                            style={{
+                                width: (time - prevTime) * scale,
+                                transform: `translateX(${(prevTime ?? 0) * scale}px)`,
+                            }}
+                        />
+                    </>
                 ) : null}
-                <ValueMarkerContainer
+                {/* ValueMarkerContainer */}
+                <div
+                    className="absolute top-0 bottom-0 left-0 z-1 flex cursor-pointer items-center"
                     onClick={(event) => {
                         event.stopPropagation();
                     }}
@@ -191,39 +143,34 @@ function ValueKeyframes({
                         whileTap={{ scale: 0.9 }}
                         style={{ rotate: 45 }}
                     />
-                </ValueMarkerContainer>
+                </div>
             </div>,
         );
         prevTime = time;
     }
 
     return (
-        <ValueAnimationContainer
-            style={{ width: (delay + duration + bufferTime) * scale }}
-            onClick={(event) => {
-                event.stopPropagation();
-                addKeyframe(
-                    elementId,
-                    id,
-                    uuid(),
-                    (event.pageX + (containerRef.current?.scrollLeft ?? 0) - sidebarWidth - 20) / scale,
-                );
-            }}
-        >
-            {markers}
-            {repeat ? <RepeatMarker repeat={repeat} time={prevTime || 0} scale={scale} /> : null}
-        </ValueAnimationContainer>
+        <>
+            {/* ValueAnimationContainer */}
+            <li
+                className="relative flex h-(--row-height)"
+                style={{ width: (delay + duration + bufferTime) * scale }}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    addKeyframe(
+                        elementId,
+                        id,
+                        uuid(),
+                        (event.pageX + (containerRef.current?.scrollLeft ?? 0) - sidebarWidth - 20) / scale,
+                    );
+                }}
+            >
+                {markers}
+                {repeat ? <RepeatMarker repeat={repeat} time={prevTime || 0} scale={scale} /> : null}
+            </li>
+        </>
     );
 }
-
-const ElementAnimationContainer = styled.ul`
-  padding-top: var(--row-height);
-  padding-left: 10px;
-
-  &:first-child {
-    padding-top: calc(var(--row-height) + 10px);
-  }
-`;
 
 export function Keyframes({
     animation,
@@ -244,7 +191,10 @@ export function Keyframes({
             );
         }
         elementAnimations.push(
-            <ElementAnimationContainer key={elementName}>{valueAnimations}</ElementAnimationContainer>,
+            <Fragment key={elementName}>
+                {/* ElementAnimationContainer */}
+                <ul className="pt-(--row-height) pl-2.5 first:pt-[calc(var(--row-height)+10px)]">{valueAnimations}</ul>
+            </Fragment>,
         );
     }
 

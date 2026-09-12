@@ -1,5 +1,6 @@
 import path from "node:path";
 import { crx } from "@crxjs/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import manifest from "./manifest.config.ts";
@@ -12,7 +13,7 @@ export default defineConfig({
             "@": path.resolve(rootDir, "src"),
         },
     },
-    plugins: [react(), crx({ manifest })],
+    plugins: [tailwindcss(), react(), crx({ manifest })],
     server: {
         cors: {
             origin: [/chrome-extension:\/\//],

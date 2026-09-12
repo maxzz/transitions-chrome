@@ -1,25 +1,5 @@
-import styled from "styled-components";
+import { Fragment } from "react";
 import { motion } from "framer-motion";
-
-const Container = styled.ul`
-  display: flex;
-`;
-
-const Tab = styled.li`
-  cursor: pointer;
-  position: relative;
-  font-weight: bold;
-  padding: 10px;
-
-  .underline {
-    height: 2px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--strong-blue);
-  }
-`;
 
 export interface ExportTab {
     id: string;
@@ -36,13 +16,21 @@ export function Tabs({
     onChange: (id: string) => void;
 }) {
     return (
-        <Container>
-            {values.map((value) => (
-                <Tab key={value.id} onClick={() => onChange(value.id)}>
-                    {value.label}
-                    {selected === value.id ? <motion.div className="underline" layoutId="underline" /> : null}
-                </Tab>
-            ))}
-        </Container>
+        <>
+            {/* Container */}
+            <ul className="flex">
+                {values.map((value) => (
+                    <Fragment key={value.id}>
+                        {/* Tab */}
+                        <li className="relative cursor-pointer p-2.5 font-bold" onClick={() => onChange(value.id)}>
+                            {value.label}
+                            {selected === value.id ? (
+                                <motion.div className="absolute right-0 bottom-0 left-0 h-0.5 bg-strong-blue" layoutId="underline" />
+                            ) : null}
+                        </li>
+                    </Fragment>
+                ))}
+            </ul>
+        </>
     );
 }

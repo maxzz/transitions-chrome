@@ -1,32 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import type { MutableRefObject } from "react";
-import styled from "styled-components";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import type { CSSProperties, MutableRefObject } from "react";
 import { getPlayback, getTimeScale, useEditorState } from "../state/store";
 import type { DragOrigin, EditorStore } from "../types";
-import { scrubberHalfWidth, sidebarWidth } from "./shared-styles";
-
-const Container = styled.div`
-  position: absolute;
-  width: 20px;
-  height: var(--row-height);
-  cursor: grabber;
-
-  svg {
-    position: relative;
-    top: 10px;
-    left: 5px;
-  }
-`;
-
-const Stick = styled.div`
-  width: 1px;
-  height: 0;
-  background-color: var(--splash);
-  position: absolute;
-  top: var(--row-height);
-  left: 10px;
-  pointer-events: none;
-`;
+import { scrubberHalfWidth, sidebarWidth } from "./shared-components";
 
 function ScrubberIcon() {
     return (
@@ -57,58 +33,34 @@ function Scrubber({
     containerRef: MutableRefObject<HTMLElement | null>;
 }) {
     return (
-        <Container
-            style={{
-                transform: `translateX(${scale * currentTime + 7}px)`,
-                cursor: dragOrigin ? "grabbing" : "grab",
-            }}
-            onPointerDown={(event) => {
-                event.stopPropagation();
-                stopPlaying();
-                setDragOrigin({
-                    pointerX: event.pageX + (containerRef.current?.scrollLeft ?? 0) - scrubberHalfWidth,
-                    time: currentTime,
-                });
-            }}
-        >
-            <ScrubberIcon />
-            <Stick
-                onPointerDown={(event) => event.stopPropagation()}
-                style={{ height: `calc(${Math.floor(timelineHeight)}px - var(--row-height))` }}
-            />
-        </Container>
+        <>
+            {/* Container */}
+            <div
+                className="absolute h-(--row-height) w-5 [&_svg]:relative [&_svg]:top-2.5 [&_svg]:left-1.25"
+                style={{
+                    transform: `translateX(${scale * currentTime + 7}px)`,
+                    cursor: dragOrigin ? "grabbing" : "grab",
+                }}
+                onPointerDown={(event) => {
+                    event.stopPropagation();
+                    stopPlaying();
+                    setDragOrigin({
+                        pointerX: event.pageX + (containerRef.current?.scrollLeft ?? 0) - scrubberHalfWidth,
+                        time: currentTime,
+                    });
+                }}
+            >
+                <ScrubberIcon />
+                {/* Stick */}
+                <div
+                    className="pointer-events-none absolute top-(--row-height) left-2.5 h-0 w-px bg-splash"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    style={{ height: `calc(${Math.floor(timelineHeight)}px - var(--row-height))` }}
+                />
+            </div>
+        </>
     );
 }
-
-const MarkerBackground = styled.div`
-  background-color: var(--feint);
-  backdrop-filter: brightness(50%) blur(3px);
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: var(--tab-bar-height);
-  height: var(--row-height);
-  z-index: 2;
-`;
-
-const MarkersRow = styled.div`
-  margin-left: calc(-1 * var(--sidebar-width) - 40px);
-  padding-left: calc(var(--sidebar-width) + 40px);
-  flex: 0 0 var(--row-height);
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  z-index: 3;
-`;
-
-const Marker = styled.div`
-  --marker-padding: 10px;
-  padding-left: var(--marker-padding);
-  color: var(--white);
-  font-weight: bold;
-  flex: 0 0 calc(var(--marker-width));
-`;
 
 const increment = 0.5;
 
@@ -120,9 +72,15 @@ function generateMarkers(totalWidth: number, scale: number) {
     for (let i = 0; i < numMarkers; i += 1) {
         const time = increment * i;
         markers.push(
-            <Marker key={time} style={{ "--marker-width": `${increment * scale}px` }}>
-                {time}
-            </Marker>,
+            <Fragment key={time}>
+                {/* Marker */}
+                <div
+                    className="[--marker-padding:10px] shrink-0 grow-0 basis-(--marker-width) pl-(--marker-padding) font-bold text-(--white)"
+                    style={{ "--marker-width": `${increment * scale}px` } as CSSProperties}
+                >
+                    {time}
+                </div>
+            </Fragment>,
         );
     }
     return markers;
@@ -164,8 +122,11 @@ export function TimeMarkers({
 
     return (
         <>
-            <MarkerBackground onClick={(event) => event.stopPropagation()} />
-            <MarkersRow
+            {/* MarkerBackground */}
+            <div className="fixed top-(--tab-bar-height) right-0 left-0 z-2 h-(--row-height) bg-feint backdrop-blur-[3px] backdrop-brightness-50" onClick={(event) => event.stopPropagation()} />
+            {/* MarkersRow */}
+            <div
+                className="sticky top-0 z-3 flex h-(--row-height) shrink-0 items-center ml-[calc(-1*var(--sidebar-width)-40px)] pl-[calc(var(--sidebar-width)+40px)]"
                 onClick={(event) => event.stopPropagation()}
                 onPointerDown={(event) => {
                     const pointerX = event.pageX + (containerRef.current?.scrollLeft ?? 0) - scrubberHalfWidth;
@@ -185,7 +146,7 @@ export function TimeMarkers({
                     timelineHeight={timelineRect.height}
                     containerRef={containerRef}
                 />
-            </MarkersRow>
+            </div>
         </>
     );
 }
