@@ -35,7 +35,7 @@ export default defineConfig({
         sourcemap: true,
         rollupOptions: {
             input: {
-                editor: path.resolve(rootDir, "src/editor/index.html"),
+                editor: path.resolve(rootDir, "src/8-1-entry-editor/index.html"),
             },
         },
     },

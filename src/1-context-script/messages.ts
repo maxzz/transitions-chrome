@@ -1,4 +1,4 @@
-import { isExtensionMessage } from "@/shared/messages";
+import { isExtensionMessage } from "@/9-shared/messages";
 import { store } from "./store";
 
 export function handleMessages(onReadyRequest?: () => void) {

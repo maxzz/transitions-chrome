@@ -1,4 +1,4 @@
-import type { RecordPlugin, ValueAnimationDraft } from "@/shared/types";
+import type { RecordPlugin, ValueAnimationDraft } from "@/9-shared/types";
 import { getEasingPoints, pipeToCamel } from "../runtime/utils";
 import { store } from "../store";
 import { markAnimationRecorded } from "./recorded-animations";

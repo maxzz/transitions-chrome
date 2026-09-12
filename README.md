@@ -67,8 +67,8 @@ Four Chrome worlds cooperate. They never share a JavaScript heap, so they talk t
 | Service worker | Extension background | `src/2-service-worker/index.ts` | Owns ports, recording flags in `chrome.storage.sync`, forwards messages, clears the timeline on navigation |
 | Bridge | Isolated content script | `src/1-context-script/bridge.ts` | Injects the page client as a classic IIFE and relays `window.postMessage` ↔ background |
 | Client | Page (MAIN) world | `src/1-context-script/client.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
-| DevTools page | Extension DevTools | `src/devtools/index.ts` | Registers the **transitions-chrome** panel |
-| Editor | DevTools panel iframe | `src/editor/index.html` → `src/0-editor-ui` | Timeline, recording toggle, export, keyframe editing |
+| DevTools page | Extension DevTools | `src/8-2-entry-devtools/index.ts` | Registers the **transitions-chrome** panel |
+| Editor | DevTools panel iframe | `src/8-1-entry-editor/index.html` → `src/0-editor-ui` | Timeline, recording toggle, export, keyframe editing |
 
 The client **must** stay a classic IIFE (`?script&iife`). An ES module in the page world cannot reliably hook CSS / Motion on arbitrary sites.
 
@@ -76,7 +76,7 @@ The client **must** stay a classic IIFE (`?script&iife`). An ES module in the pa
 
 ```
 src/
-  shared/                 Cross-world types (animations + message union)
+  9-shared/               Cross-world types (animations + message union)
     types.ts
     messages.ts
 
@@ -101,11 +101,11 @@ src/
       easing.ts
       utils.ts
 
-  devtools/               chrome.devtools.panels.create(...)
+  8-2-entry-devtools/     chrome.devtools.panels.create(...)
     index.html
     index.ts
 
-  editor/                 Panel shell (HTML, fonts, CSS)
+  8-1-entry-editor/       Panel shell (HTML, fonts, CSS)
     index.html            #app mount + main.ts
     main.ts
     styles.css
@@ -127,7 +127,7 @@ manifest.config.ts        MV3 manifest consumed by @crxjs/vite-plugin
 vite.config.ts
 ```
 
-Shared contracts live in `src/shared` so the service worker, page scripts, and panel stay aligned on message `type` strings (`init`, `clientready`, `animationstart`, `isrecording`, `inspectanimation`, `scrubanimation`, `clear`).
+Shared contracts live in `src/9-shared` so the service worker, page scripts, and panel stay aligned on message `type` strings (`init`, `clientready`, `animationstart`, `isrecording`, `inspectanimation`, `scrubanimation`, `clear`).
 
 ## Execution flows
 
@@ -146,7 +146,7 @@ flowchart LR
 
   subgraph Extension["Extension process"]
     SW["2-service-worker/index.ts"]
-    DT["devtools/index.ts"]
+    DT["8-2-entry-devtools/index.ts"]
     Editor["0-editor-ui Editor"]
     DT -->|creates panel| Editor
   end
@@ -244,7 +244,7 @@ The page client also posts `animationstart` through `chrome.runtime.sendMessage`
 
 ## Editor structure
 
-`src/0-editor-ui` is the DevTools panel application: a TypeScript port of the original `editor.bundle.js` UI, still on **React 17**. `src/editor/main.ts` imports it after fonts and CSS; `index.tsx` mounts `<Editor />` into `#app` with `ReactDOM.render`.
+`src/0-editor-ui` is the DevTools panel application: a TypeScript port of the original `editor.bundle.js` UI, still on **React 17**. `src/8-1-entry-editor/main.ts` imports it after fonts and CSS; `index.tsx` mounts `<Editor />` into `#app` with `ReactDOM.render`.
 
 Folders split by job, not by file size:
 
@@ -438,7 +438,7 @@ Keyboard (when no input is focused):
 
 | What you changed | What to do |
 | --- | --- |
-| Panel UI (`src/0-editor-ui`, `src/editor`) | `pnpm dev` often refreshes the panel; if not, close and reopen DevTools |
+| Panel UI (`src/0-editor-ui`, `src/8-1-entry-editor`) | `pnpm dev` often refreshes the panel; if not, close and reopen DevTools |
 | Page client / bridge (`src/1-context-script`) | Reload the **inspected tab** so the content script injects again |
 | Service worker (`src/2-service-worker`) | **Reload** the extension on `chrome://extensions`, then reopen DevTools |
 | `manifest.config.ts` | Reload the extension, then reopen DevTools |
@@ -449,7 +449,7 @@ A committed navigation on `http` / `localhost` also sends `clear` to the panel.
 ### Troubleshooting
 
 **Panel is blank or throws `chrome is not defined`**  
-You opened `src/editor/index.html` or the Vite URL in a normal tab. Load the unpacked extension and open the panel from DevTools.
+You opened `src/8-1-entry-editor/index.html` or the Vite URL in a normal tab. Load the unpacked extension and open the panel from DevTools.
 
 **Nothing appears on the timeline**  
 Recording is off; the page did not run a CSS or Motion One animation; or the client did not inject (reload the tab after enabling the extension). Hard-refresh the page with DevTools open.

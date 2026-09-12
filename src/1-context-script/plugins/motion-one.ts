@@ -1,4 +1,4 @@
-import type { RecordPlugin } from "@/shared/types";
+import type { RecordPlugin } from "@/9-shared/types";
 import { store } from "../store";
 
 export const motionOne: RecordPlugin = {

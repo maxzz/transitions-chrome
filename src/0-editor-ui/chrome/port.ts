@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ExtensionMessage } from "@/shared/messages";
+import type { ExtensionMessage } from "@/9-shared/messages";
 import {
     getAddAnimations,
     getClear,

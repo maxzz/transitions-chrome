@@ -1,4 +1,4 @@
-import type { AnimationMetadata, AnimationSource, KeyframeData, RecordedAnimations, ValueAnimationRecord } from "@/shared/types";
+import type { AnimationMetadata, AnimationSource, KeyframeData, RecordedAnimations, ValueAnimationRecord } from "@/9-shared/types";
 
 export type { AnimationMetadata, AnimationSource, KeyframeData, RecordedAnimations, ValueAnimationRecord };
 

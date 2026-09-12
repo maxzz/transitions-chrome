@@ -6,7 +6,7 @@ import type {
     AnimationOptions,
     AnimationSource,
     RecordedAnimations,
-} from "@/shared/types";
+} from "@/9-shared/types";
 import { getElementId } from "./element-id";
 import { defaultOffset, defaults, fillOffset, isEasingGenerator, isEasingList } from "./runtime/utils";
 

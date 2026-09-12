@@ -1,4 +1,4 @@
-import type { AnimationStartMessage } from "@/shared/messages";
+import type { AnimationStartMessage } from "@/9-shared/messages";
 import { cssAnimation } from "./plugins/css-animation";
 import { cssTransition } from "./plugins/css-transition";
 import { motionOne } from "./plugins/motion-one";

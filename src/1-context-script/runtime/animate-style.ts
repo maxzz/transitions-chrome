@@ -1,4 +1,4 @@
-import type { AnimationOptions, AnimationSource } from "@/shared/types";
+import type { AnimationOptions, AnimationSource } from "@/9-shared/types";
 import { convertEasing, getEasingForSegment, getEasingFunction } from "./easing";
 import {
     addTransformToElement,

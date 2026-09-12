@@ -11,7 +11,7 @@ export default defineManifest({
         service_worker: "src/2-service-worker/index.ts",
         type: "module",
     },
-    devtools_page: "src/devtools/index.html",
+    devtools_page: "src/8-2-entry-devtools/index.html",
     externally_connectable: {
         matches: ["https://*.motion.dev/*", "*://localhost/*"],
     },
@@ -24,7 +24,7 @@ export default defineManifest({
     web_accessible_resources: [
         {
             matches: ["https://*/*", "http://*/*", "file:///*"],
-            resources: ["src/editor/index.html"],
+            resources: ["src/8-1-entry-editor/index.html"],
         },
     ],
 });

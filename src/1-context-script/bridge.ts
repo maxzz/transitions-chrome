@@ -1,5 +1,5 @@
-import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/shared/messages";
-import { isExtensionMessage } from "@/shared/messages";
+import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/9-shared/messages";
+import { isExtensionMessage } from "@/9-shared/messages";
 import { getPageClientFile } from "./page-client-file";
 
 window.__MOTION_BRIDGE_HAS_LOADED = true;
