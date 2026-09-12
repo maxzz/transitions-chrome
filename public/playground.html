@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>transitions-chrome playground</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1115;
+        --panel: #1a1e26;
+        --feint: rgba(133, 150, 193, 0.2);
+        --text: #f5f5f5;
+        --muted: rgba(245, 245, 245, 0.6);
+        --yellow: #ffeb0e;
+        --blue: #0d63f8;
+        --splash: #00ffdb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.5 Inter, system-ui, sans-serif;
+      }
+
+      main {
+        width: min(640px, 100%);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+      }
+
+      .intro {
+        color: var(--muted);
+        margin: 0 0 28px;
+      }
+
+      .intro code {
+        color: var(--yellow);
+        font-size: 0.9em;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .card {
+        padding: 20px;
+        border: 1px solid var(--feint);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 0.95rem;
+      }
+
+      .card p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .box {
+        width: 72px;
+        height: 72px;
+        border-radius: 12px;
+        background: var(--splash);
+        animation: enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      @keyframes enter {
+        from {
+          transform: translateY(24px) scale(0.85);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: var(--blue);
+        color: white;
+        font: inherit;
+        cursor: pointer;
+        transition:
+          transform 220ms ease,
+          background-color 220ms ease,
+          box-shadow 220ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px) scale(1.04);
+        background: #2b7bff;
+        box-shadow: 0 10px 24px rgba(13, 99, 248, 0.35);
+      }
+
+      .toggle {
+        width: 100%;
+        max-width: 220px;
+        height: 48px;
+        border-radius: 12px;
+        background: #2a3140;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background-color 320ms ease,
+          transform 320ms ease,
+          letter-spacing 320ms ease;
+      }
+
+      .toggle.is-on {
+        background: var(--yellow);
+        color: #0f1115;
+        transform: scale(1.06);
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>transitions-chrome playground</h1>
+      <p class="intro">
+        Open DevTools → <code>transitions-chrome</code>, leave recording on, then use the controls below.
+        Reload this tab to recapture the entrance animation.
+      </p>
+      <div class="grid">
+        <section class="card">
+          <h2>CSS animation on load</h2>
+          <p>The square plays <code>@keyframes</code> when the page loads.</p>
+          <div class="box" aria-hidden="true"></div>
+        </section>
+        <section class="card">
+          <h2>CSS transition on hover</h2>
+          <p>Hover the button to record transform, color, and shadow.</p>
+          <button type="button">Hover me</button>
+        </section>
+        <section class="card">
+          <h2>Class toggle</h2>
+          <p>Click to add or remove a transitioning class.</p>
+          <button type="button" class="toggle" id="toggle">Off</button>
+        </section>
+      </div>
+    </main>
+    <script>
+      const toggle = document.getElementById("toggle");
+      toggle.addEventListener("click", () => {
+        const on = toggle.classList.toggle("is-on");
+        toggle.textContent = on ? "On" : "Off";
+      });
+    </script>
+  </body>
+</html>

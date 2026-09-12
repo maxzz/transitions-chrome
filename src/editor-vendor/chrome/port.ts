@@ -49,6 +49,13 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
                     return;
                 case "clear":
                     clear();
+                    return;
+                case "clientready":
+                    port.postMessage({
+                        type: "isrecording",
+                        isRecording: getIsRecording(useEditorState.getState()),
+                        tabId: chrome.devtools.inspectedWindow.tabId,
+                    });
             }
         };
         port.onMessage.addListener(listener);
@@ -71,10 +78,14 @@ export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
     useEffect(() => {
         if (port) return;
+        const tabId = chrome?.devtools?.inspectedWindow?.tabId;
+        if (typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
+            return;
+        }
         const nextPort = chrome.runtime.connect({ name: "devtools-page" });
         nextPort.postMessage({
             type: "init",
-            tabId: chrome.devtools.inspectedWindow.tabId,
+            tabId,
         });
         nextPort.onDisconnect.addListener(() => setPort(undefined));
         setPort(nextPort);

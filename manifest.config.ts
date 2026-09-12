@@ -14,9 +14,17 @@ export default defineManifest({
     content_scripts: [
         {
             all_frames: true,
+            js: ["src/context/client.ts"],
+            matches: ["<all_urls>"],
+            run_at: "document_start",
+            world: "MAIN",
+        },
+        {
+            all_frames: true,
             js: ["src/context/bridge.ts"],
             matches: ["<all_urls>"],
             run_at: "document_start",
+            world: "ISOLATED",
         },
     ],
     devtools_page: "src/devtools/index.html",

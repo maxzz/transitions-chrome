@@ -1,17 +1,21 @@
 import { isExtensionMessage } from "@/shared/messages";
 import { store } from "./store";
 
-export function handleMessages() {
+export function handleMessages(onReadyRequest?: () => void) {
     window.addEventListener("message", ({ source, data }) => {
         if (source !== window) return;
+        if (data?.type === "requestclientready") {
+            onReadyRequest?.();
+            return;
+        }
         if (!isExtensionMessage(data)) return;
 
         const state = store.getState();
         switch (data.type) {
             case "isrecording": {
                 if (data.isRecording) {
-                    state.startRecording();
-                } else {
+                    if (!state.isRecording) state.startRecording();
+                } else if (state.isRecording) {
                     state.stopRecording();
                 }
                 break;

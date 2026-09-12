@@ -1,13 +1,7 @@
-import clientScript from "./client?script&iife";
 import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/shared/messages";
 import { isExtensionMessage } from "@/shared/messages";
 
 window.__MOTION_BRIDGE_HAS_LOADED = true;
-
-const script = document.createElement("script");
-script.src = chrome.runtime.getURL(clientScript);
-document.documentElement.appendChild(script);
-script.parentNode?.removeChild(script);
 
 let backgroundPort: chrome.runtime.Port | undefined;
 
@@ -56,3 +50,4 @@ const handleMessagesFromWebPage = (event: MessageEvent) => {
 };
 
 window.addEventListener("message", handleMessagesFromWebPage, false);
+window.postMessage({ type: "requestclientready" }, "*");
