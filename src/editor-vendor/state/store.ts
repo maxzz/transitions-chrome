@@ -327,12 +327,18 @@ function useEditorState<T>(selector: Selector<T>, equalityFn: EqualityFn<T> = Ob
     const [slice, setSlice] = useState(() => selector(editorStore.getState()));
 
     useEffect(() => {
+        let active = true;
         const sync = (state: EditorStore) => {
+            if (!active) return;
             const next = selectorRef.current(state);
             setSlice((prev) => (equalityRef.current(prev, next) ? prev : next));
         };
         sync(editorStore.getState());
-        return editorStore.subscribe(sync);
+        const unsubscribe = editorStore.subscribe(sync);
+        return () => {
+            active = false;
+            unsubscribe();
+        };
     }, []);
 
     return slice;

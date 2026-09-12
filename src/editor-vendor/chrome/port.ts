@@ -43,7 +43,9 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
 
     useEffect(() => {
         if (!port) return;
+        let active = true;
         const listener = (message: ExtensionMessage) => {
+            if (!active) return;
             switch (message.type) {
                 case "animationstart":
                     addAnimations(message.animations);
@@ -61,7 +63,10 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
             }
         };
         port.onMessage.addListener(listener);
-        return () => port.onMessage.removeListener(listener);
+        return () => {
+            active = false;
+            port.onMessage.removeListener(listener);
+        };
     }, [port, addAnimations, clear]);
 }
 
@@ -79,20 +84,41 @@ function useIsRecording(port?: chrome.runtime.Port) {
 export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
     useEffect(() => {
-        if (port) return;
         const tabId = chrome?.devtools?.inspectedWindow?.tabId;
         if (typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
             return;
         }
-        const nextPort = chrome.runtime.connect({ name: "devtools-page" });
-        nextPort.postMessage({
-            type: "init",
-            tabId,
-        });
-        nextPort.onDisconnect.addListener(() => setPort(undefined));
-        setPort(nextPort);
-        injectClientIntoInspectedPage();
-    }, [port]);
+
+        let active = true;
+        let currentPort: chrome.runtime.Port | undefined;
+        let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const connect = () => {
+            if (!active) return;
+            const nextPort = chrome.runtime.connect({ name: "devtools-page" });
+            currentPort = nextPort;
+            nextPort.postMessage({
+                type: "init",
+                tabId,
+            });
+            nextPort.onDisconnect.addListener(() => {
+                if (!active) return;
+                if (currentPort === nextPort) currentPort = undefined;
+                setPort(undefined);
+                reconnectTimer = setTimeout(connect, 0);
+            });
+            setPort(nextPort);
+            injectClientIntoInspectedPage();
+        };
+
+        connect();
+
+        return () => {
+            active = false;
+            if (reconnectTimer !== undefined) clearTimeout(reconnectTimer);
+            currentPort?.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         const onNavigated = chrome?.devtools?.network?.onNavigated;
