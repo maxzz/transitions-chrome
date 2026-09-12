@@ -3,7 +3,7 @@ import type { MutableRefObject } from "react";
 import { v4 as uuid } from "uuid";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { shallow } from "../lib/shallow";
+import { shallow } from "../utils/shallow";
 import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
 import type { AnimationMetadata, DragOrigin, EditorStore, KeyframeMetadata, ValueAnimationRecord } from "../types";

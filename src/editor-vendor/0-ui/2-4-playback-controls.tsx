@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { framesyncCancel, framesyncUpdate } from "../lib/framesync";
+import { framesyncCancel, framesyncUpdate } from "../utils/framesync";
 import { getPlayback, getSelectedAnimation, useEditorState } from "../state/store";
 import { PauseIcon, PlayIcon, SkipBackIcon } from "./8-icons";
 

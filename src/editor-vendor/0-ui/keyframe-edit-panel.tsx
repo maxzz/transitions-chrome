@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import styled from "styled-components";
 import { Leva, LevaInputs, useControls } from "leva";
 import { bezier } from "@leva-ui/plugin-bezier";
-import { shallow } from "../lib/shallow";
+import { shallow } from "../utils/shallow";
 import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import {
     getDeleteKeyframe,

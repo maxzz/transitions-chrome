@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { shallow } from "../lib/shallow";
+import { shallow } from "../utils/shallow";
 import { useEditorState } from "../state/store";
 import type { EditorStore } from "../types";
 import { RecordIcon } from "./8-icons";

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import useMeasure from "react-use-measure";
 import { AnimatePresence, motion } from "framer-motion";
-import { shallow } from "../lib/shallow";
+import { shallow } from "../utils/shallow";
 
 import styled from "styled-components";
 import { sidebarWidth } from "./shared-styles";

@@ -1,5 +1,5 @@
 import type { KeyframeData, RecordedAnimations, TimestampedKeyframe, ValueAnimationRecord } from "../types";
-import { omitKeys } from "../lib/omit-keys";
+import { omitKeys } from "../utils/omit-keys";
 
 export const defaults = {
     duration: 0.3,
