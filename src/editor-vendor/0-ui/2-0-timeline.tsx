@@ -3,12 +3,9 @@ import useMeasure from "react-use-measure";
 import { AnimatePresence, motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 
-import styled from "styled-components";
-import { sidebarWidth } from "./shared-styles";
-
+import { type EditorStore } from "../types";
 import { useEditorState } from "../state/store";
 
-import { type EditorStore } from "../types";
 import { Sidebar } from "./2-1-sidebar";
 import { TimeMarkers } from "./2-2-time-markers";
 import { Keyframes } from "./2-3-keyframes";
@@ -29,29 +26,32 @@ export function Timeline() {
     }
 
     return (
-        <Container ref={ref}>
-            <Content ref={measureRef} key={selectedAnimationName}>
+        <motion.main
+            ref={ref}
+            className="relative flex flex-1 [overflow:overlay] [--row-height:28px] [--sidebar-width:220px]"
+        >
+            {/* Main content */}
+            <div className="grid grid-cols-[var(--sidebar-width)_1fr]" ref={measureRef} key={selectedAnimationName}>
                 <Sidebar animation={selectedAnimation} />
 
-                <Visualisation onClick={deselectKeyframes}>
+                {/* Visualization of the timeline */}
+                <div className="relative flex flex-1 flex-col" onClick={deselectKeyframes}>
                     <TimeMarkers containerRef={ref} timelineRect={rect} currentTime={selectedAnimation.currentTime} />
                     <Keyframes containerRef={ref} animation={selectedAnimation} />
                     <PlaybackControls />
-                </Visualisation>
-            </Content>
+                </div>
+            </div>
 
             <AnimatePresence>{isExportOpen ? <CodeExport /> : null}</AnimatePresence>
 
-            <Curtain
+            {/* Curtain */}
+            <motion.div
+                className="pointer-events-none absolute inset-0 z-1000 bg-background"
                 initial={{ opacity: 1 }}
-                animate={{
-                    opacity: 0,
-                    transition: { ease: "linear", duration: 0.5 },
-                    transitionEnd: { display: "none" },
-                }}
+                animate={{ opacity: 0, transition: { ease: "linear", duration: 0.5 }, transitionEnd: { display: "none" } }}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
             />
-        </Container>
+        </motion.main>
     );
 }
 
@@ -63,35 +63,3 @@ function getTimelineState({ animations, selectedAnimationName, deselectKeyframes
         isExportOpen,
     });
 }
-
-const Container = styled(motion.main)`
-  display: flex;
-  overflow: overlay;
-  position: relative;
-  flex: 1;
-  --row-height: 28px;
-  --sidebar-width: ${sidebarWidth}px;
-`;
-
-const Content = styled.div`
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
-`;
-
-const Visualisation = styled.div`
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  flex: 1;
-`;
-
-const Curtain = styled(motion.div)`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--background);
-  pointer-events: none;
-  z-index: 1000;
-`;
