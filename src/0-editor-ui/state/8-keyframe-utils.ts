@@ -1,4 +1,4 @@
-import type { KeyframeData, RecordedAnimations, TimestampedKeyframe, ValueAnimationRecord } from "../types";
+import type { KeyframeData, RecordedAnimations, TimestampedKeyframe, ValueAnimationRecord } from "../9-types-ui";
 import { omitKeys } from "../utils/omit-keys";
 
 export const defaultTransitionOptionsUi = { // see also defaultTransitionOptions in 1-context-script/runtime/4-utils.ts

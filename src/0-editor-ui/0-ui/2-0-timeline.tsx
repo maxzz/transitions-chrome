@@ -3,7 +3,7 @@ import useMeasure from "react-use-measure";
 import { AnimatePresence, motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 
-import { type EditorStore } from "../types";
+import { type EditorStore } from "../9-types-ui";
 import { useEditorState } from "../state/0-ui-store";
 
 import { Sidebar } from "./2-1-sidebar";

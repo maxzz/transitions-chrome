@@ -1,4 +1,4 @@
-import type { RecordPlugin, ValueAnimationDraft } from "@/9-shared/types";
+import type { RecordPlugin, ValueAnimationDraft } from "@/9-shared/9-types-shared";
 import { store } from "../8-0-store";
 import { getEasingPoints, timeConvert } from "../runtime/4-utils";
 import { markAnimationRecorded } from "./2-utils-recorded-animations";

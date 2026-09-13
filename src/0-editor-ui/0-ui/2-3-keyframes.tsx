@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 import { RepeatIcon } from "./8-icons";
 
-import { type AnimationMetadata, type DragOrigin, type EditorStore, type KeyframeMetadata, type ValueAnimationRecord } from "../types";
+import { type AnimationMetadata, type DragOrigin, type EditorStore, type KeyframeMetadata, type ValueAnimationRecord } from "../9-types-ui";
 import { sortKeyframesByOffset } from "../state/8-keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/0-ui-store";
 import { sidebarWidth, ValueMarker } from "./8-shared-components";

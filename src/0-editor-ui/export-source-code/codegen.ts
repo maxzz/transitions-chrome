@@ -1,5 +1,5 @@
 import { camelToPipe, defaultOffset, defaultTransitionOptionsUi, pipeToCamel, sortKeyframesByOffset } from "../state/8-keyframe-utils";
-import type { AnimationMetadata } from "../types";
+import type { AnimationMetadata } from "../9-types-ui";
 
 const noopReturn = <T>(value: T) => value;
 const indent = 2;

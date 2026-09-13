@@ -2,7 +2,7 @@ import { AnimatePresence } from "framer-motion";
 import { useKeyboardShortcuts } from "../chrome/keyboard";
 import { usePort } from "../chrome/port";
 import { useEditorState } from "../state/0-ui-store";
-import type { EditorStore } from "../types";
+import type { EditorStore } from "../9-types-ui";
 import { Instructions } from "./1-1-instructions";
 import { KeyframeEditPanel } from "./2-5-keyframe-leva-controls";
 import { TabBar } from "./1-2-tab-bar";

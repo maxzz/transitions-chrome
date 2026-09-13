@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createStore } from "zustand/vanilla";
 import { current, produce } from "immer";
-import { type AnimationMetadata, type EditorStore, type KeyframeMetadata, type RecordedAnimations } from "../types";
+import { type AnimationMetadata, type EditorStore, type KeyframeMetadata, type RecordedAnimations } from "../9-types-ui";
 import {
     compareKeyframeByTime,
     defaultTransitionOptionsUi,

@@ -1,4 +1,4 @@
-import type { AnimationMetadata, RecordedAnimations } from "./types";
+import type { AnimationMetadata, RecordedAnimations } from "./9-types-shared";
 
 export type ClientReadyMessage = {
     type: "clientready";

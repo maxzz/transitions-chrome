@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 import { useEditorState } from "../state/0-ui-store";
-import type { EditorStore } from "../types";
+import type { EditorStore } from "../9-types-ui";
 import { RecordIcon } from "./8-icons";
 
 export function TabBar() {

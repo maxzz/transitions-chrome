@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import type { AnimationMetadata, EditorStore } from "../types";
+import type { AnimationMetadata, EditorStore } from "../9-types-ui";
 import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
 import { getSetIsExportOpen, useEditorState } from "../state/0-ui-store";
 

@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla";
 import { subscribeWithSelector } from "zustand/middleware";
 import { v4 as uuid } from "uuid";
-import { type AnimationMetadata, type AnimationOptions, type AnimationSource, type KeyframeData, type RecordedAnimations } from "@/9-shared/types";
+import { type AnimationMetadata, type AnimationOptions, type AnimationSource, type KeyframeData, type RecordedAnimations } from "@/9-shared/9-types-shared";
 import { defaultOffset, defaultTransitionOptions, fillOffset, isEasingGenerator, isEasingList } from "./runtime/4-utils";
 
 export interface ClientState {

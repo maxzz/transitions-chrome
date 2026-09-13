@@ -1,4 +1,4 @@
-import { type AnimationOptions, type AnimationSource } from "@/9-shared/types";
+import { type AnimationOptions, type AnimationSource } from "@/9-shared/9-types-shared";
 import { convertEasing, getEasingForSegment, getEasingFunction } from "./3-easing";
 import { addTransformToElement, getAnimationData, getMotionValue, getStyleName, isCssVar, isTransform, registerCssVariable, stopAnimation, styleAccess, transformCssDefinitions, type AnimationLike } from "./2-style";
 import { defaultTransitionOptions, hydrateKeyframes, isEasingGenerator, isEasingList, isNumber, keyframesList, mix, noop, noopReturn, progress, timeConvert, defaultOffset, fillOffset } from "./4-utils";

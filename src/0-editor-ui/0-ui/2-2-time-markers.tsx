@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MutableRefObject } from "react";
 import { getPlayback, getTimeScale, useEditorState } from "../state/0-ui-store";
-import type { DragOrigin, EditorStore } from "../types";
+import type { DragOrigin, EditorStore } from "../9-types-ui";
 import { scrubberHalfWidth, sidebarWidth } from "./8-shared-components";
 
 export function TimeMarkers({ currentTime, timelineRect, containerRef }: { currentTime: number; timelineRect: { width: number; height: number; }; containerRef: MutableRefObject<HTMLElement | null>; }) {

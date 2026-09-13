@@ -11,7 +11,7 @@ import {
     getUpdateKeyframeEasing,
     useEditorState,
 } from "../state/0-ui-store";
-import type { EditorStore, KeyframeData, KeyframeMetadata } from "../types";
+import type { EditorStore, KeyframeData, KeyframeMetadata } from "../9-types-ui";
 import { TrashIcon } from "./8-icons";
 
 export function KeyframeEditPanel() {

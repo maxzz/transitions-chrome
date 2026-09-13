@@ -5,7 +5,7 @@ import css from "highlight.js/lib/languages/css";
 import javascript from "highlight.js/lib/languages/javascript";
 import { generateCSSAnimationCode, generateCSSTransitionCode, generateMotionOneCode } from "../export-source-code/codegen";
 import { getSelectedAnimation, getSetIsExportOpen, useEditorState } from "../state/0-ui-store";
-import type { AnimationMetadata, AnimationSource } from "../types";
+import type { AnimationMetadata, AnimationSource } from "../9-types-ui";
 import { CloseIcon } from "./8-icons";
 import { Tabs } from "./7-1-tabs";
 

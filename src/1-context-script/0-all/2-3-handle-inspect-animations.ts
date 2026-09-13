@@ -1,4 +1,4 @@
-import type { AnimationMetadata } from "@/9-shared/types";
+import type { AnimationMetadata } from "@/9-shared/9-types-shared";
 import { animateStyle } from "../runtime/1-animate-style";
 import { pipeToCamel, sortKeyframesByOffset } from "../runtime/4-utils";
 import { transformNames } from "../runtime/2-style";
