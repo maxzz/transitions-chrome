@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
-import { getSetIsExportOpen, useEditorState } from "../state/store";
 import type { AnimationMetadata, EditorStore } from "../types";
 import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
+import { getSetIsExportOpen, useEditorState } from "../state/store";
 
 function inspect(motionId: string) {
     chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
@@ -16,6 +16,7 @@ function ElementDetails({ name }: { name: string; }) {
             <h2>
                 <code className="text-xs leading-[1.4] font-bold">{name}</code>
             </h2>
+
             {/* ActionContainer */}
             <div className="flex items-center">
                 <button type="button" className="ml-1.25 p-0" onClick={() => addValue(name, uuid())}>
@@ -29,24 +30,6 @@ function ElementDetails({ name }: { name: string; }) {
     );
 }
 
-const getRenameValue = (state: EditorStore) => state.renameValue;
-
-function ExportButton() {
-    const setIsExportOpen = useEditorState(getSetIsExportOpen);
-    return (
-        <button
-            type="button"
-            className="absolute right-2.5 bottom-2.5 left-2.5 flex items-center justify-center rounded-[5px] border border-feint px-3.75 py-2.5 text-(--white) [&_path]:fill-(--white) [&_svg]:mr-1.25 [&_svg]:size-4 [&_svg]:text-(--red)"
-            onClick={() => setIsExportOpen(true)}
-        >
-            <CodeExportIcon /> Export
-        </button>
-    );
-}
-
-const valueRowClassName =
-    "relative flex h-(--row-height) items-center pl-6.25 before:absolute before:bottom-3.25 before:left-1.25 before:block before:h-(--row-height) before:w-2.5 before:border-2 before:border-feint before:border-t-0 before:border-r-0 before:content-[''] [&:nth-child(2)]:before:h-3";
-
 export function Sidebar({ animation }: { animation: AnimationMetadata; }) {
     const { elements } = animation;
     const children = [];
@@ -55,18 +38,17 @@ export function Sidebar({ animation }: { animation: AnimationMetadata; }) {
     for (const elementName in elements) {
         const elementChildren = [];
         const elementAnimations = animation.elements[elementName] ?? [];
+
         for (const { valueName, id } of elementAnimations) {
             elementChildren.push(
-                <li key={id} className={valueRowClassName}>
+                <li key={id} className={valueRowClasses}>
                     {/* ValueName */}
                     <input
                         className="code appearance-none border-0 border-b border-transparent bg-transparent text-(--white) focus:border-strong-blue focus:outline-none focus-visible:border-strong-blue focus-visible:outline-none"
                         value={valueName}
                         placeholder="Enter value name"
                         autoFocus={valueName === ""}
-                        onChange={(event) => {
-                            renameValue(elementName, id, event.currentTarget.value);
-                        }}
+                        onChange={(event) => { renameValue(elementName, id, event.currentTarget.value); }}
                     />
                 </li>,
             );
@@ -86,3 +68,56 @@ export function Sidebar({ animation }: { animation: AnimationMetadata; }) {
         </section>
     );
 }
+
+const valueRowClasses = "relative \
+flex \
+h-(--row-height) \
+items-center \
+pl-6.25 \
+before:absolute \
+before:bottom-3.25 \
+before:left-1.25 \
+before:block \
+before:h-(--row-height) \
+before:w-2.5 \
+before:border-2 \
+before:border-feint \
+before:border-t-0 \
+before:border-r-0 \
+before:content-[''] \
+nth-2:before:h-3 \
+";
+
+const getRenameValue = (state: EditorStore) => state.renameValue;
+
+function ExportButton() {
+    const setIsExportOpen = useEditorState(getSetIsExportOpen);
+    return (
+        <button
+            className={exportButtonClasses}
+            onClick={() => setIsExportOpen(true)}
+            type="button"
+        >
+            <CodeExportIcon /> Export
+        </button>
+    );
+}
+
+const exportButtonClasses = "absolute \
+right-2.5 \
+bottom-2.5 \
+left-2.5 \
+flex \
+items-center \
+justify-center \
+rounded-[5px] \
+border \
+border-feint \
+px-3.75 \
+py-2.5 \
+text-(--white) \
+[&_path]:fill-(--white) \
+[&_svg]:mr-1.25 \
+[&_svg]:size-4 \
+[&_svg]:text-(--red) \
+";

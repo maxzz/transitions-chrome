@@ -26,10 +26,8 @@ export function Timeline() {
     }
 
     return (
-        <motion.main
-            ref={ref}
-            className="relative flex flex-1 [overflow:overlay] [--row-height:28px] [--sidebar-width:220px]"
-        >
+        <motion.main ref={ref} className="relative flex flex-1 [overflow:overlay] [--row-height:28px] [--sidebar-width:220px]">
+            
             {/* Main content */}
             <div className="grid grid-cols-[var(--sidebar-width)_1fr]" ref={measureRef} key={selectedAnimationName}>
                 <Sidebar animation={selectedAnimation} />

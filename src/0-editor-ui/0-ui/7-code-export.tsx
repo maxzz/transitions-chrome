@@ -9,27 +9,6 @@ import type { AnimationMetadata, AnimationSource } from "../types";
 import { CloseIcon } from "./8-icons";
 import { Tabs } from "./tabs";
 
-hljs.registerLanguage("css", css);
-hljs.registerLanguage("javascript", javascript);
-
-function getSource(animation?: AnimationMetadata): AnimationSource {
-    if (!animation) return "motion-one";
-    const firstAnimation = Object.values(animation.elements)[0]?.[0];
-    return firstAnimation?.source || "motion-one";
-}
-
-const tabs = [
-    { id: "motion-one", label: "Motion One" },
-    { id: "css-animation", label: "CSS animation" },
-    { id: "css-transition", label: "CSS transition" },
-];
-
-const codeGenerators: Record<string, (animation: AnimationMetadata) => string> = {
-    "motion-one": generateMotionOneCode,
-    "css-transition": generateCSSTransitionCode,
-    "css-animation": generateCSSAnimationCode,
-};
-
 export function CodeExport() {
     const setIsEditorOpen = useEditorState(getSetIsExportOpen);
     const selectedAnimation = useEditorState(getSelectedAnimation);
@@ -103,3 +82,26 @@ export function CodeExport() {
         </LayoutGroup>
     );
 }
+
+//---------------------------------------------------------------------------
+
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("javascript", javascript);
+
+function getSource(animation?: AnimationMetadata): AnimationSource {
+    if (!animation) return "motion-one";
+    const firstAnimation = Object.values(animation.elements)[0]?.[0];
+    return firstAnimation?.source || "motion-one";
+}
+
+const tabs = [
+    { id: "motion-one", label: "Motion One" },
+    { id: "css-animation", label: "CSS animation" },
+    { id: "css-transition", label: "CSS transition" },
+];
+
+const codeGenerators: Record<string, (animation: AnimationMetadata) => string> = {
+    "motion-one": generateMotionOneCode,
+    "css-transition": generateCSSTransitionCode,
+    "css-animation": generateCSSAnimationCode,
+};
