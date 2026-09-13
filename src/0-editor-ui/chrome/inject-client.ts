@@ -1,21 +1,21 @@
 import clientScript from "../../1-context-script/0-all/0-client-entry?script&iife";
 
-function pageClientFile() {
-    return String(clientScript).replace(/^\//, "");
-}
-
 /**
  * Run the page-world IIFE in the inspected tab via the DevTools protocol.
  * This bypasses page CSP, which blocks inline <script> injection.
  */
 export function injectClientIntoInspectedPage() {
     const inspectedWindow = chrome?.devtools?.inspectedWindow;
-    if (!inspectedWindow?.eval || !chrome?.runtime?.getURL) return;
+    if (!inspectedWindow?.eval || !chrome?.runtime?.getURL) {
+        return;
+    }
 
     const url = chrome.runtime.getURL(pageClientFile());
     fetch(url)
         .then((response) => {
-            if (!response.ok) throw new Error(String(response.status));
+            if (!response.ok) {
+                throw new Error(String(response.status));
+            }
             return response.text();
         })
         .then((code) => {
@@ -26,4 +26,8 @@ export function injectClientIntoInspectedPage() {
                 `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`,
             );
         });
+}
+
+function pageClientFile() {
+    return String(clientScript).replace(/^\//, ""); // Remove leading slash from the script path
 }

@@ -5,7 +5,7 @@ import { injectClientIntoInspectedPage } from "./inject-client";
 
 export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
-    
+
     useEffect(
         () => {
             const tabId = chrome?.devtools?.inspectedWindow?.tabId;
@@ -27,12 +27,19 @@ export function usePort() {
 
                 nextPort.onDisconnect.addListener(
                     () => {
-                        if (!active) return;
-                        if (currentPort === nextPort) currentPort = undefined;
+                        if (!active) {
+                            return;
+                        }
+                        if (currentPort === nextPort) {
+                            currentPort = undefined;
+                        }
                         setPort(undefined);
+                        console.log("%c currentPort disconnected", "color: red; font-weight: bold;");
+
                         reconnectTimer = setTimeout(connect, 0);
                     }
                 );
+                
                 setPort(nextPort);
                 injectClientIntoInspectedPage();
             };

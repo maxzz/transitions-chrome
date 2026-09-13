@@ -4,7 +4,9 @@
  * chrome.scripting.registerContentScripts in dev).
  */
 (function () {
-    if (window.__MOTION_BRIDGE_HAS_LOADED) return;
+    if (window.__MOTION_BRIDGE_HAS_LOADED) {
+        return;
+    }
     window.__MOTION_BRIDGE_HAS_LOADED = true;
 
     var backgroundPort;
@@ -25,6 +27,7 @@
 
         port.onDisconnect.addListener(function () {
             backgroundPort = undefined;
+            console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
         });
     }
 
@@ -38,14 +41,22 @@
     window.addEventListener(
         "message",
         function (event) {
-            if (event.source !== window) return;
+            if (event.source !== window) {
+                return;
+            }
             var data = event.data;
-            if (!data || typeof data !== "object" || typeof data.type !== "string") return;
+            if (!data || typeof data !== "object" || typeof data.type !== "string") {
+                return;
+            }
 
-            if (!backgroundPort) connect();
+            if (!backgroundPort) {
+                connect();
+            }
 
             if (data.type === "animationstart" || data.type === "clientready") {
-                if (backgroundPort) backgroundPort.postMessage(data);
+                if (backgroundPort) {
+                    backgroundPort.postMessage(data);
+                }
             }
         },
         false,

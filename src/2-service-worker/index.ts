@@ -192,6 +192,8 @@ function handleDevToolsPort(port: chrome.runtime.Port) {
     port.onMessage.addListener(listener);
 
     port.onDisconnect.addListener(() => {
+        console.log("%c DevTools port disconnected", "color: red; font-weight: bold;");
+
         port.onMessage.removeListener(listener);
         devToolsConnections.forEach(
             (connection, id) => {

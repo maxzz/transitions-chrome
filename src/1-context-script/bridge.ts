@@ -84,13 +84,12 @@ function bindPortListeners(port: chrome.runtime.Port) {
             case "tabId": return;
             case "isrecording":
             case "inspectanimation":
-            case "scrubanimation": {
-                window.postMessage(backgroundMessage, "*");
-            }
+            case "scrubanimation": window.postMessage(backgroundMessage, "*");
         }
     });
 
     port.onDisconnect.addListener(() => {
         backgroundPort = undefined;
+        console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
     });
 }
