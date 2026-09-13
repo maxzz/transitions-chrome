@@ -1,6 +1,6 @@
-import { handleInspectedAnimation } from "./inspect";
-import { handleMessages } from "./messages";
-import { handleRecordedAnimations } from "./5-recording";
+import { handleInspectedAnimation } from "./2-3-handle-inspect-animations";
+import { handleMessages } from "./2-1-handle-messages";
+import { handleRecordedAnimations } from "./2-2-handle-recorded-animations";
 
 /**
  * Page-world client. This file is bundled as a classic IIFE and injected into

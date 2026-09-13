@@ -1,8 +1,8 @@
 import type { AnimationStartMessage } from "@/9-shared/messages";
-import { cssAnimation } from "../plugins/css-animation";
-import { cssTransition } from "../plugins/css-transition";
-import { motionOne } from "../plugins/motion-one";
-import { startAnimationScan } from "../plugins/scan-animations";
+import { cssAnimation } from "../plugins/1-1-plugin-css-animation";
+import { cssTransition } from "../plugins/1-2-plugin-css-transition";
+import { motionOne } from "../plugins/1-3-plugin-motion-one";
+import { startAnimationScan } from "../plugins/1-0-scan-animations";
 import { store } from "../8-0-store";
 
 const plugins = [cssTransition, cssAnimation, motionOne];

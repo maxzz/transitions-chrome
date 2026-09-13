@@ -1,56 +1,141 @@
-import type { AnimationOptions, AnimationSource } from "@/9-shared/types";
+import { type AnimationOptions, type AnimationSource } from "@/9-shared/types";
 import { convertEasing, getEasingForSegment, getEasingFunction } from "./easing";
-import {
-    addTransformToElement,
-    getAnimationData,
-    getMotionValue,
-    getStyleName,
-    isCssVar,
-    isTransform,
-    registerCssVariable,
-    stopAnimation,
-    style,
-    transformDefinitions,
-    type AnimationLike,
-} from "./style";
-import {
-    defaults,
-    hydrateKeyframes,
-    isEasingGenerator,
-    isEasingList,
-    isNumber,
-    keyframesList,
-    mix,
-    noop,
-    noopReturn,
-    progress,
-    time,
-    defaultOffset,
-    fillOffset,
-} from "./utils";
+import { addTransformToElement, getAnimationData, getMotionValue, getStyleName, isCssVar, isTransform, registerCssVariable, stopAnimation, style, transformDefinitions, type AnimationLike } from "./style";
+import { defaults, hydrateKeyframes, isEasingGenerator, isEasingList, isNumber, keyframesList, mix, noop, noopReturn, progress, time, defaultOffset, fillOffset } from "./utils";
 
-const clampProgress = (p: number) => Math.min(1, Math.max(p, 0));
+export type { JSAnimation };
 
-function interpolate(
-    output: number[],
-    input = defaultOffset(output.length),
-    easing: unknown = noopReturn,
-) {
-    const length = output.length;
-    const remainder = length - input.length;
-    if (remainder > 0) fillOffset(input, remainder);
+export function animateStyle(element: HTMLElement, key: string, keyframesDefinition: unknown, options: AnimationOptions = {}) {
+    const record = getDevToolsRecord();
+    const isRecording = options.record !== false && record;
+    let animation: AnimationLike | JSAnimation | undefined;
+    let {
+        duration = defaults.duration,
+        delay = defaults.delay,
+        endDelay = defaults.endDelay,
+        repeat = defaults.repeat,
+        easing = defaults.easing,
+        direction,
+        offset,
+        allowWebkitAcceleration = false,
+    } = options;
 
-    return (t: number) => {
-        let i = 0;
-        for (; i < length - 2; i += 1) {
-            if (t < (input[i + 1] ?? 1)) break;
+    const data = getAnimationData(element);
+    let canAnimateNatively = supports.waapi();
+    const valueIsTransform = isTransform(key);
+    if (valueIsTransform) addTransformToElement(element, key);
+
+    const name = getStyleName(key);
+    const motionValue = getMotionValue(data.values, name);
+    const definition = transformDefinitions.get(name);
+
+    stopAnimation(motionValue.animation, !(isEasingGenerator(easing) && motionValue.generator) && options.record !== false);
+
+    return () => {
+        const readInitialValue = () => style.get(element, name) ?? definition?.initialValue ?? 0;
+
+        let keyframes = hydrateKeyframes(keyframesList(keyframesDefinition), readInitialValue);
+
+        if (isEasingGenerator(easing)) {
+            const custom = (
+                easing as {
+                    createAnimation: (
+                        frames: unknown[],
+                        read: () => unknown,
+                        isTransformValue: boolean,
+                        valueName?: string,
+                        value?: unknown,
+                    ) => { easing: unknown; keyframes?: unknown[]; duration?: number; };
+                }
+            ).createAnimation(keyframes, readInitialValue, valueIsTransform, name, motionValue);
+            easing = custom.easing;
+            if (custom.keyframes !== undefined) keyframes = custom.keyframes;
+            if (custom.duration !== undefined) duration = custom.duration;
         }
-        let progressInRange = clampProgress(progress(input[i] ?? 0, input[i + 1] ?? 1, t));
-        const segmentEasing = getEasingForSegment(easing, i);
-        progressInRange = getEasingFunction(segmentEasing)(progressInRange);
-        return mix(output[i] ?? 0, output[i + 1] ?? 1, progressInRange);
+
+        if (isCssVar(name)) {
+            if (supports.cssRegisterProperty()) {
+                registerCssVariable(name);
+            } else {
+                canAnimateNatively = false;
+            }
+        }
+
+        if (canAnimateNatively) {
+            if (definition) {
+                keyframes = keyframes.map((value) => isNumber(value) ? definition.toDefaultUnit(value) : value);
+            }
+            const needsToReadInitialKeyframe = !supports.partialKeyframes() && keyframes.length === 1;
+            if (isRecording || needsToReadInitialKeyframe) {
+                keyframes.unshift(readInitialValue());
+            }
+
+            const animationOptions: KeyframeAnimationOptions = {
+                delay: time.ms(delay),
+                duration: time.ms(duration),
+                endDelay: time.ms(endDelay),
+                easing: !isEasingList(easing) ? (convertEasing(easing) as string) : undefined,
+                direction,
+                iterations: (typeof repeat === "number" ? repeat : 0) + 1,
+                fill: "both",
+            };
+
+            const nativeAnimation = element.animate(
+                {
+                    [name]: keyframes,
+                    offset,
+                    easing: isEasingList(easing) ? easing.map((value) => convertEasing(value) as string) : undefined,
+                } as PropertyIndexedKeyframes,
+                animationOptions,
+            );
+            animation = nativeAnimation;
+
+            if (!nativeAnimation.finished) {
+                Object.assign(nativeAnimation, {
+                    finished: new Promise((resolve, reject) => {
+                        nativeAnimation.onfinish = () => resolve(undefined);
+                        nativeAnimation.oncancel = () => reject();
+                    }),
+                });
+            }
+
+            const target = keyframes[keyframes.length - 1];
+            animation.finished
+                .then(() => {
+                    style.set(element, name, target as string | number);
+                    animation?.cancel();
+                })
+                .catch(noop);
+
+            if (!allowWebkitAcceleration) animation.playbackRate = 1.000001;
+        } else if (valueIsTransform && keyframes.every(isNumber)) {
+            if (keyframes.length === 1) {
+                keyframes.unshift(parseFloat(String(readInitialValue())));
+            }
+            const render = (latest: number) => {
+                const next = definition ? definition.toDefaultUnit(latest) : latest;
+                style.set(element, name, next);
+            };
+            animation = new JSAnimation(render, keyframes as number[], { ...options, duration, easing });
+        } else {
+            const target = keyframes[keyframes.length - 1];
+            style.set(element, name, definition && isNumber(target) ? definition.toDefaultUnit(target) : (target as string | number));
+        }
+
+        if (isRecording && record) {
+            record(element, key, keyframes, { duration, delay, easing, repeat, offset }, "motion-one" satisfies AnimationSource);
+        }
+
+        motionValue.setAnimation(animation as AnimationLike);
+        return animation;
     };
 }
+
+function getDevToolsRecord() {
+    return window.__MOTION_DEV_TOOLS_RECORD;
+}
+
+//---------------------------------------------------------------------------
 
 class JSAnimation {
     startTime: number | null = null;
@@ -207,8 +292,28 @@ class JSAnimation {
     }
 }
 
-const testAnimation = (keyframes: PropertyIndexedKeyframes) =>
-    document.createElement("div").animate(keyframes, { duration: 0.001 });
+//---------------------------------------------------------------------------
+
+function interpolate(output: number[], input = defaultOffset(output.length), easing: unknown = noopReturn) {
+    const length = output.length;
+    const remainder = length - input.length;
+    if (remainder > 0) fillOffset(input, remainder);
+
+    return (t: number) => {
+        let i = 0;
+        for (; i < length - 2; i += 1) {
+            if (t < (input[i + 1] ?? 1)) {
+                break;
+            }
+        }
+        let progressInRange = clampProgress(progress(input[i] ?? 0, input[i + 1] ?? 1, t));
+        const segmentEasing = getEasingForSegment(easing, i);
+        progressInRange = getEasingFunction(segmentEasing)(progressInRange);
+        return mix(output[i] ?? 0, output[i + 1] ?? 1, progressInRange);
+    };
+}
+
+const clampProgress = (p: number) => Math.min(1, Math.max(p, 0));
 
 const featureTests = {
     cssRegisterProperty: () => typeof CSS !== "undefined" && Object.hasOwn(CSS, "registerProperty"),
@@ -223,6 +328,10 @@ const featureTests = {
     },
     finished: () => Boolean(testAnimation({ opacity: [0, 1] }).finished),
 };
+
+function testAnimation(keyframes: PropertyIndexedKeyframes) {
+    return document.createElement("div").animate(keyframes, { duration: 0.001 });
+}
 
 const results: Record<string, boolean> = {};
 const supports: Record<keyof typeof featureTests, () => boolean> = {
@@ -243,159 +352,3 @@ const supports: Record<keyof typeof featureTests, () => boolean> = {
         return results.finished;
     },
 };
-
-function getDevToolsRecord() {
-    return window.__MOTION_DEV_TOOLS_RECORD;
-}
-
-export function animateStyle(
-    element: HTMLElement,
-    key: string,
-    keyframesDefinition: unknown,
-    options: AnimationOptions = {},
-) {
-    const record = getDevToolsRecord();
-    const isRecording = options.record !== false && record;
-    let animation: AnimationLike | JSAnimation | undefined;
-    let {
-        duration = defaults.duration,
-        delay = defaults.delay,
-        endDelay = defaults.endDelay,
-        repeat = defaults.repeat,
-        easing = defaults.easing,
-        direction,
-        offset,
-        allowWebkitAcceleration = false,
-    } = options;
-
-    const data = getAnimationData(element);
-    let canAnimateNatively = supports.waapi();
-    const valueIsTransform = isTransform(key);
-    if (valueIsTransform) addTransformToElement(element, key);
-    const name = getStyleName(key);
-    const motionValue = getMotionValue(data.values, name);
-    const definition = transformDefinitions.get(name);
-
-    stopAnimation(
-        motionValue.animation,
-        !(isEasingGenerator(easing) && motionValue.generator) && options.record !== false,
-    );
-
-    return () => {
-        const readInitialValue = () =>
-            style.get(element, name) ?? definition?.initialValue ?? 0;
-
-        let keyframes = hydrateKeyframes(keyframesList(keyframesDefinition), readInitialValue);
-
-        if (isEasingGenerator(easing)) {
-            const custom = (
-                easing as {
-                    createAnimation: (
-                        frames: unknown[],
-                        read: () => unknown,
-                        isTransformValue: boolean,
-                        valueName?: string,
-                        value?: unknown,
-                    ) => { easing: unknown; keyframes?: unknown[]; duration?: number; };
-                }
-            ).createAnimation(keyframes, readInitialValue, valueIsTransform, name, motionValue);
-            easing = custom.easing;
-            if (custom.keyframes !== undefined) keyframes = custom.keyframes;
-            if (custom.duration !== undefined) duration = custom.duration;
-        }
-
-        if (isCssVar(name)) {
-            if (supports.cssRegisterProperty()) {
-                registerCssVariable(name);
-            } else {
-                canAnimateNatively = false;
-            }
-        }
-
-        if (canAnimateNatively) {
-            if (definition) {
-                keyframes = keyframes.map((value) =>
-                    isNumber(value) ? definition.toDefaultUnit(value) : value,
-                );
-            }
-            const needsToReadInitialKeyframe = !supports.partialKeyframes() && keyframes.length === 1;
-            if (isRecording || needsToReadInitialKeyframe) {
-                keyframes.unshift(readInitialValue());
-            }
-
-            const animationOptions: KeyframeAnimationOptions = {
-                delay: time.ms(delay),
-                duration: time.ms(duration),
-                endDelay: time.ms(endDelay),
-                easing: !isEasingList(easing) ? (convertEasing(easing) as string) : undefined,
-                direction,
-                iterations: (typeof repeat === "number" ? repeat : 0) + 1,
-                fill: "both",
-            };
-
-            const nativeAnimation = element.animate(
-                {
-                    [name]: keyframes,
-                    offset,
-                    easing: isEasingList(easing) ? easing.map((value) => convertEasing(value) as string) : undefined,
-                } as PropertyIndexedKeyframes,
-                animationOptions,
-            );
-            animation = nativeAnimation;
-
-            if (!nativeAnimation.finished) {
-                Object.assign(nativeAnimation, {
-                    finished: new Promise((resolve, reject) => {
-                        nativeAnimation.onfinish = () => resolve(undefined);
-                        nativeAnimation.oncancel = () => reject();
-                    }),
-                });
-            }
-
-            const target = keyframes[keyframes.length - 1];
-            animation.finished
-                .then(() => {
-                    style.set(element, name, target as string | number);
-                    animation?.cancel();
-                })
-                .catch(noop);
-
-            if (!allowWebkitAcceleration) animation.playbackRate = 1.000001;
-        } else if (valueIsTransform && keyframes.every(isNumber)) {
-            if (keyframes.length === 1) {
-                keyframes.unshift(parseFloat(String(readInitialValue())));
-            }
-            const render = (latest: number) => {
-                const next = definition ? definition.toDefaultUnit(latest) : latest;
-                style.set(element, name, next);
-            };
-            animation = new JSAnimation(render, keyframes as number[], {
-                ...options,
-                duration,
-                easing,
-            });
-        } else {
-            const target = keyframes[keyframes.length - 1];
-            style.set(
-                element,
-                name,
-                definition && isNumber(target) ? definition.toDefaultUnit(target) : (target as string | number),
-            );
-        }
-
-        if (isRecording && record) {
-            record(
-                element,
-                key,
-                keyframes,
-                { duration, delay, easing, repeat, offset },
-                "motion-one" satisfies AnimationSource,
-            );
-        }
-
-        motionValue.setAnimation(animation as AnimationLike);
-        return animation;
-    };
-}
-
-export type { JSAnimation };
