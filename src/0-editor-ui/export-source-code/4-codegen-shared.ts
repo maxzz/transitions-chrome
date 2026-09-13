@@ -1,5 +1,8 @@
 import { pipeToCamel } from "../state/8-keyframe-utils";
 
+//---------------------------------------------------------------------------
+// Shared functions
+
 const noopReturn = <T>(value: T) => value;
 const indent = 2;
 
@@ -7,10 +10,14 @@ export function newLine(depth = 0, string = "") {
     return `\n${" ".repeat(depth * indent)}${string}`;
 }
 
+//---------------------------------------------------------------------------
+// Transform axes
+
 const axes = ["", "x", "y", "z"];
 const order = ["translate", "scale", "rotate", "skew"] as const;
 
 export const asTransformCssVar = (name: string) => `--motion-${name}`;
+
 const asTransformFunction = (name: string) => {
     switch (name) {
         case "x":
@@ -21,6 +28,9 @@ const asTransformFunction = (name: string) => {
             return pipeToCamel(name);
     }
 };
+
+//---------------------------------------------------------------------------
+// Transform properties
 
 const rotation = {
     syntax: "<angle>",
@@ -44,6 +54,7 @@ const baseTransformProperties = {
 };
 
 const transformDefinitions = new Map<string, (typeof baseTransformProperties)[keyof typeof baseTransformProperties]>();
+
 const transforms = ["x", "y", "z"];
 order.forEach((name) => {
     axes.forEach((axis) => {
@@ -52,8 +63,13 @@ order.forEach((name) => {
     });
 });
 
+//---------------------------------------------------------------------------
+// Transform lookup
+
 const transformLookup = new Set(transforms);
+
 export const isTransform = (name: string) => transformLookup.has(name);
+
 const getCssVarDefinition = (name: string) => {
     switch (name) {
         case "x":
@@ -64,7 +80,10 @@ const getCssVarDefinition = (name: string) => {
             return baseTransformProperties[name.split("-")[0] as keyof typeof baseTransformProperties];
     }
 };
+
 export const isCssVar = (name: string) => name.startsWith("--");
+
+//---------------------------------------------------------------------------
 
 export function generateCSSTransform(valueTransforms: Set<string>) {
     let code = "";

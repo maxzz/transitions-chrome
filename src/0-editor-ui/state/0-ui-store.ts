@@ -118,7 +118,7 @@ function withHistory(createState: (set: SetState, get: GetState) => Omit<EditorS
                 const selectedAnimationName = (typeof args === "function" ? args(get()) : args).selectedAnimationName || get().selectedAnimationName;
 
                 const prevState = selectedAnimationName ? get().animations[selectedAnimationName]?.elements : undefined;
-                
+
                 set({ undo, redo, enableHistory });
                 set(args);
 
@@ -127,7 +127,7 @@ function withHistory(createState: (set: SetState, get: GetState) => Omit<EditorS
                 if (!isEnabled || !selectedAnimationName || prevState === currentState) {
                     return;
                 }
-                
+
                 if (prevState === undefined) {
                     prev[selectedAnimationName] = [];
                 }
@@ -136,7 +136,7 @@ function withHistory(createState: (set: SetState, get: GetState) => Omit<EditorS
                 if (prevState) {
                     prevBuffer.push(prevState);
                 }
-                next[selectedAnimationName] = [];``
+                next[selectedAnimationName] = []; ``;
             };
 
         return {
@@ -366,7 +366,7 @@ export { useEditorState };
 //---------------------------------------------------------------------------
 // Keyframe Updater
 
-const makeKeyframeUpdater = (get: GetState, set: SetState, key: "value" | "easing") => {
+function makeKeyframeUpdater(get: GetState, set: SetState, key: "value" | "easing") {
     return (keyframeMeta: KeyframeMetadata, newValue: unknown) => {
         const { animations, selectedAnimationName } = get();
         const { elementName, valueId, id } = keyframeMeta;
@@ -399,4 +399,4 @@ const makeKeyframeUpdater = (get: GetState, set: SetState, key: "value" | "easin
             selectedKeyframes: [{ ...keyframeMeta }],
         });
     };
-};
+}

@@ -53,12 +53,12 @@ const namedBezierHandles: Record<string, BezierHandles> = {
 
 //---------------------------------------------------------------------------
 
-export function compareKeyframeByOffset(a: { offset: number; }, b: { offset: number; }) { return a.offset > b.offset ? 1 : -1; }
-export function compareKeyframeByTime(a: { time: number; }, b: { time: number; }) { return a.time > b.time ? 1 : -1; }
-
 export function sortKeyframesByOffset(keyframes: Record<string, KeyframeData>) {
     return Object.values(keyframes).sort(compareKeyframeByOffset);
 }
+
+export function compareKeyframeByOffset(a: { offset: number; }, b: { offset: number; }) { return a.offset > b.offset ? 1 : -1; }
+export function compareKeyframeByTime(a: { time: number; }, b: { time: number; }) { return a.time > b.time ? 1 : -1; }
 
 export const camelToPipe = (str: string) => str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 export const pipeToCamel = (str: string) => str.replace(/-([a-z])/g, (match) => match[1].toUpperCase());
@@ -67,13 +67,13 @@ export const pipeToCamel = (str: string) => str.replace(/-([a-z])/g, (match) => 
 
 export function getDefaultValue(name: string) {
     const key = pipeToCamel(name);
-    return valueTypes[key]?.defaultValue ?? "";
+    return allValueTypes[key]?.defaultValue ?? "";
 }
 
 const scale = { defaultValue: "1" };
 const opacity = { defaultValue: "1" };
 const color = { defaultValue: "#000" };
-const valueTypes: Record<string, { defaultValue: string; }> = {
+const allValueTypes: Record<string, { defaultValue: string; }> = {
     scale,
     scaleX: scale,
     scaleY: scale,

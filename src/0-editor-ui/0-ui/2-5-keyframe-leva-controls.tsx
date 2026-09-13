@@ -3,15 +3,8 @@ import { Leva, LevaInputs, useControls } from "leva";
 import { bezier } from "@leva-ui/plugin-bezier";
 import { shallow } from "../utils/shallow";
 import { sortKeyframesByOffset, toBezierHandles } from "../state/8-keyframe-utils";
-import {
-    getDeleteKeyframe,
-    getHistory,
-    getSelectedAnimation,
-    getUpdateKeyframe,
-    getUpdateKeyframeEasing,
-    useEditorState,
-} from "../state/0-ui-store";
 import type { EditorStore, KeyframeData, KeyframeMetadata } from "../9-types-ui";
+import { getDeleteKeyframe, getHistory, getSelectedAnimation, getUpdateKeyframe, getUpdateKeyframeEasing, useEditorState } from "../state/0-ui-store";
 import { TrashIcon } from "./8-icons";
 
 export function KeyframeEditPanel() {
@@ -109,7 +102,7 @@ function KeyframeSettings({ keyframe, keyframeMetadata, index }: { keyframe: Key
     const deleteKeyframe = useEditorState(getDeleteKeyframe);
     const { valueName, id: keyframeId } = keyframeMetadata;
     const { value, easing, isUserCreated } = keyframe;
-    
+
     const { enableHistory } = useEditorState(getHistory, shallow);
     const historyCallbacks = {
         onEditStart: () => enableHistory?.(false),

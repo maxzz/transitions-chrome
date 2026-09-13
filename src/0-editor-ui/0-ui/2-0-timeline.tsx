@@ -8,9 +8,9 @@ import { useEditorState } from "../state/0-ui-store";
 
 import { Sidebar } from "./2-1-sidebar";
 import { TimeMarkers } from "./2-2-time-markers";
-import { Keyframes } from "./2-3-keyframes";
-import { PlaybackControls } from "./2-4-playback-controls";
-import { CodeExport } from "./7-0-code-export";
+import { Keyframes } from "./2-4-keyframes";
+import { PlaybackControls } from "./2-3-playback-controls";
+import { CodeExportPopover } from "./7-0-code-export-popover";
 
 export function Timeline() {
     const ref = useRef<HTMLDivElement | null>(null);
@@ -40,7 +40,7 @@ export function Timeline() {
                 </div>
             </div>
 
-            <AnimatePresence>{isExportOpen ? <CodeExport /> : null}</AnimatePresence>
+            <AnimatePresence>{isExportOpen ? <CodeExportPopover /> : null}</AnimatePresence>
 
             {/* Curtain */}
             <motion.div

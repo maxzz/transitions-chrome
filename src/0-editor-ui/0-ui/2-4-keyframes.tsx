@@ -1,6 +1,6 @@
 import { type MutableRefObject, Fragment, useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
 import { motion } from "framer-motion";
+import { v4 as uuid } from "uuid";
 import { shallow } from "../utils/shallow";
 import { RepeatIcon } from "./8-icons";
 
@@ -16,11 +16,13 @@ export function Keyframes({ animation, containerRef }: { animation: AnimationMet
 
     for (const elementName in elements) {
         const valueAnimations = [];
+        
         for (const valueAnimation of elements[elementName] ?? []) {
             valueAnimations.push(
                 <ValueKeyframes key={valueAnimation.id} containerRef={containerRef} scale={scale} animation={valueAnimation} />,
             );
         }
+
         elementAnimations.push(
             <Fragment key={elementName}>
                 {/* ElementAnimationContainer */}
@@ -86,15 +88,10 @@ function ValueKeyframes({ scale, animation, containerRef }: { scale: number; ani
                         {/* TransitionMarker */}
                         <motion.div
                             className="absolute top-[calc(50%-1px)] left-0 h-0.5 rounded-xs bg-feint"
+                            style={{ width: (time - prevTime) * scale, transform: `translateX(${(prevTime ?? 0) * scale}px)` }}
                             initial={false}
-                            animate={{
-                                backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)",
-                            }}
+                            animate={{ backgroundColor: keyframeIsSelected ? "var(--strong-blue)" : "var(--feint)" }}
                             transition={{ duration: 0.1 }}
-                            style={{
-                                width: (time - prevTime) * scale,
-                                transform: `translateX(${(prevTime ?? 0) * scale}px)`,
-                            }}
                         />
                     </>)
                     : null
@@ -153,8 +150,7 @@ function ValueKeyframes({ scale, animation, containerRef }: { scale: number; ani
 const bufferTime = 1;
 
 function RepeatMarker({ scale, time, repeat }: { scale: number; time: number; repeat: number | string; }) {
-    return (<>
-        {/* RepeatContainer */}
+    return (
         <div className="absolute top-0 bottom-0 w-50" style={{ transform: `translateX(${time * scale}px)` }}>
 
             {/* TransitionMarker */}
@@ -169,7 +165,7 @@ function RepeatMarker({ scale, time, repeat }: { scale: number; time: number; re
                 {repeat}
             </code>
         </div>
-    </>);
+    );
 }
 
 const getSelectedKeyframes = (state: EditorStore) => state.selectedKeyframes;

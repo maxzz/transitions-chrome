@@ -9,7 +9,7 @@ import type { AnimationMetadata, AnimationSource } from "../9-types-ui";
 import { CloseIcon } from "./8-icons";
 import { Tabs } from "./7-1-tabs";
 
-export function CodeExport() {
+export function CodeExportPopover() {
     const setIsEditorOpen = useEditorState(getSetIsExportOpen);
     const selectedAnimation = useEditorState(getSelectedAnimation);
     const [exportType, setExportType] = useState(getSource(selectedAnimation));
