@@ -10,7 +10,7 @@ import { Sidebar } from "./2-1-sidebar";
 import { TimeMarkers } from "./2-2-time-markers";
 import { Keyframes } from "./2-3-keyframes";
 import { PlaybackControls } from "./2-4-playback-controls";
-import { CodeExport } from "./7-code-export";
+import { CodeExport } from "./7-0-code-export";
 
 export function Timeline() {
     const ref = useRef<HTMLDivElement | null>(null);
@@ -27,7 +27,7 @@ export function Timeline() {
 
     return (
         <motion.main ref={ref} className="relative flex flex-1 [overflow:overlay] [--row-height:28px] [--sidebar-width:220px]">
-            
+
             {/* Main content */}
             <div className="grid grid-cols-[var(--sidebar-width)_1fr]" ref={measureRef} key={selectedAnimationName}>
                 <Sidebar animation={selectedAnimation} />

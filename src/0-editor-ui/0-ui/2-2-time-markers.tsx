@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MutableRefObject } from "react";
 import { getPlayback, getTimeScale, useEditorState } from "../state/store";
 import type { DragOrigin, EditorStore } from "../types";
-import { scrubberHalfWidth, sidebarWidth } from "./shared-components";
+import { scrubberHalfWidth, sidebarWidth } from "./8-shared-components";
 
 export function TimeMarkers({ currentTime, timelineRect, containerRef }: { currentTime: number; timelineRect: { width: number; height: number; }; containerRef: MutableRefObject<HTMLElement | null>; }) {
     const [dragOrigin, setDragOrigin] = useState<DragOrigin | undefined>(undefined);

@@ -7,7 +7,7 @@ import { generateCSSAnimationCode, generateCSSTransitionCode, generateMotionOneC
 import { getSelectedAnimation, getSetIsExportOpen, useEditorState } from "../state/store";
 import type { AnimationMetadata, AnimationSource } from "../types";
 import { CloseIcon } from "./8-icons";
-import { Tabs } from "./tabs";
+import { Tabs } from "./7-1-tabs";
 
 export function CodeExport() {
     const setIsEditorOpen = useEditorState(getSetIsExportOpen);

@@ -3,9 +3,9 @@ import { useKeyboardShortcuts } from "../chrome/keyboard";
 import { usePort } from "../chrome/port";
 import { useEditorState } from "../state/store";
 import type { EditorStore } from "../types";
-import { Instructions } from "./1-instructions";
-import { KeyframeEditPanel } from "./keyframe-edit-panel";
-import { TabBar } from "./tab-bar";
+import { Instructions } from "./1-1-instructions";
+import { KeyframeEditPanel } from "./2-5-keyframe-leva-controls";
+import { TabBar } from "./1-2-tab-bar";
 import { Timeline } from "./2-0-timeline";
 
 export function Editor() {

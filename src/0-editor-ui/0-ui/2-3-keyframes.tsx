@@ -7,7 +7,7 @@ import { RepeatIcon } from "./8-icons";
 import { type AnimationMetadata, type DragOrigin, type EditorStore, type KeyframeMetadata, type ValueAnimationRecord } from "../types";
 import { sortKeyframesByOffset } from "../state/keyframe-utils";
 import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
-import { sidebarWidth, ValueMarker } from "./shared-components";
+import { sidebarWidth, ValueMarker } from "./8-shared-components";
 
 export function Keyframes({ animation, containerRef }: { animation: AnimationMetadata; containerRef: MutableRefObject<HTMLElement | null>; }) {
     const { elements } = animation;

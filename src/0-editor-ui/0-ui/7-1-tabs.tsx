@@ -1,20 +1,12 @@
 import { Fragment } from "react";
 import { motion } from "framer-motion";
 
-export interface ExportTab {
+type ExportTab = {
     id: string;
     label: string;
 }
 
-export function Tabs({
-    values,
-    selected,
-    onChange,
-}: {
-    values: ExportTab[];
-    selected: string;
-    onChange: (id: string) => void;
-}) {
+export function Tabs({ values, selected, onChange }: { values: ExportTab[]; selected: string; onChange: (id: string) => void; }) {
     return (
         <>
             {/* Container */}
