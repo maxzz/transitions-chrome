@@ -18,8 +18,12 @@ function pageClientFile() {
     return getPageClientFile();
 }
 
+const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
+
 async function registerPageClient() {
-    if (!chrome.scripting?.registerContentScripts) return;
+    if (!chrome.scripting?.registerContentScripts) {
+        return;
+    }
     try {
         await chrome.scripting.unregisterContentScripts({
             ids: [PAGE_CLIENT_SCRIPT_ID, "transitions-chrome-page-bridge"],
@@ -55,8 +59,6 @@ async function registerPageClient() {
         }
     }
 }
-
-const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
 
 function injectIntoTab(tabId: number, file: string, world: "MAIN" | "ISOLATED", frameId?: number) {
     if (!chrome.scripting?.executeScript) {
