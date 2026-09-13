@@ -1,4 +1,4 @@
-import clientScript from "./client?script&iife";
+import clientScript from "./0-all/0-client-entry?script&iife";
 
 function toExtensionFile(id: string) {
     return String(id).replace(/^\//, "");

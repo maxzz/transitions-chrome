@@ -1,4 +1,4 @@
-import clientScript from "../../1-context-script/client?script&iife";
+import clientScript from "../../1-context-script/0-all/0-client-entry?script&iife";
 
 function pageClientFile() {
     return String(clientScript).replace(/^\//, "");

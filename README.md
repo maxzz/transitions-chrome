@@ -66,7 +66,7 @@ Four Chrome worlds cooperate. They never share a JavaScript heap, so they talk t
 | --- | --- | --- | --- |
 | Service worker | Extension background | `src/2-service-worker/index.ts` | Owns ports, recording flags in `chrome.storage.sync`, forwards messages, clears the timeline on navigation |
 | Bridge | Isolated content script | `src/1-context-script/bridge.ts` | Injects the page client as a classic IIFE and relays `window.postMessage` ↔ background |
-| Client | Page (MAIN) world | `src/1-context-script/client.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
+| Client | Page (MAIN) world | `src/1-context-script/0-all/0-client-entry.ts` | Sees real DOM animations, runs record plugins, plays back inspect / scrub |
 | DevTools page | Extension DevTools | `src/8-2-entry-devtools/index.ts` | Registers the **transitions-chrome** panel |
 | Editor | DevTools panel iframe | `src/8-1-entry-editor/index.html` → `src/0-editor-ui` | Timeline, recording toggle, export, keyframe editing |
 
@@ -84,8 +84,9 @@ src/
     index.ts
 
   1-context-script/       Scripts that run against the inspected page
+    0-all/
+      0-client-entry.ts   Page-world bootstrap
     bridge.ts             Isolated: inject client, relay messages
-    client.ts             Page-world bootstrap
     store.ts              Recording / inspect state (zustand vanilla)
     recording.ts          Plugin start/stop + flush to the bridge
     messages.ts           Page-world handlers for isrecording / inspect / scrub
@@ -137,7 +138,7 @@ Shared contracts live in `src/9-shared` so the service worker, page scripts, and
 flowchart LR
   subgraph Page["Inspected tab"]
     DOM["Page DOM / CSS / Motion"]
-    Client["1-context-script/client.ts<br/>MAIN world IIFE"]
+    Client["1-context-script/0-all/0-client-entry.ts<br/>MAIN world IIFE"]
     Bridge["1-context-script/bridge.ts<br/>isolated content script"]
     DOM <--> Client
     Client -->|"window.postMessage"| Bridge
