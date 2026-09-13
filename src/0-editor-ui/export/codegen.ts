@@ -1,4 +1,4 @@
-import { camelToPipe, defaultOffset, defaults, pipeToCamel, sortKeyframesByOffset } from "../state/keyframe-utils";
+import { camelToPipe, defaultOffset, defaultTransitionOptionsUi, pipeToCamel, sortKeyframesByOffset } from "../state/keyframe-utils";
 import type { AnimationMetadata } from "../types";
 
 const noopReturn = <T>(value: T) => value;
@@ -205,7 +205,7 @@ export function generateCSSTransitionCode({ elements }: AnimationMetadata) {
             }
 
             code += newLine(1, `${name}: ${value};`);
-            const easingString = easingToCss(easing) ?? defaults.easing;
+            const easingString = easingToCss(easing) ?? defaultTransitionOptionsUi.easing;
             transition += `${name} ${duration}s ${easingString}`;
             if (delay) transition += ` ${delay}s`;
             if (i < elementAnimation.length - 1) transition += `, `;
@@ -231,7 +231,7 @@ function easingAsString(easing: unknown) {
     if (Array.isArray(easing)) {
         return `[${round(Number(easing[0]))}, ${round(Number(easing[1]))}, ${round(Number(easing[2]))}, ${round(Number(easing[3]))}]`;
     }
-    return `"${defaults.easing}"`;
+    return `"${defaultTransitionOptionsUi.easing}"`;
 }
 
 function generateEasingString(easings: unknown[]) {
@@ -267,7 +267,7 @@ export function generateMotionOneCode({ elements }: AnimationMetadata) {
                 const { value, offset, easing } = orderedKeyframes[i];
                 values.push(value);
                 offsets.push(offset);
-                if (i) easings.push(easing || defaults.easing);
+                if (i) easings.push(easing || defaultTransitionOptionsUi.easing);
             }
             reducedOptions[valueName].easing = generateEasingString(easings);
             const offsetString = generateOffsetString(offsets);
@@ -347,7 +347,7 @@ function reduceOptions(options: Record<string, Record<string, unknown>>) {
         for (const optionName in valueOptions) {
             const value = valueOptions[optionName];
             if (highestCount.get(optionName) === value) {
-                if (value !== (defaults as Record<string, unknown>)[optionName]) {
+                if (value !== (defaultTransitionOptionsUi as Record<string, unknown>)[optionName]) {
                     reduced[optionName] = value;
                 }
             } else {
