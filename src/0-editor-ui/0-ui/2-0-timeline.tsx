@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
 
 import { type EditorStore } from "../types";
-import { useEditorState } from "../state/store";
+import { useEditorState } from "../state/0-ui-store";
 
 import { Sidebar } from "./2-1-sidebar";
 import { TimeMarkers } from "./2-2-time-markers";

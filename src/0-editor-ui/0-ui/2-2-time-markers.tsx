@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MutableRefObject } from "react";
-import { getPlayback, getTimeScale, useEditorState } from "../state/store";
+import { getPlayback, getTimeScale, useEditorState } from "../state/0-ui-store";
 import type { DragOrigin, EditorStore } from "../types";
 import { scrubberHalfWidth, sidebarWidth } from "./8-shared-components";
 

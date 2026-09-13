@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import type { AnimationMetadata, EditorStore } from "../types";
 import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
-import { getSetIsExportOpen, useEditorState } from "../state/store";
+import { getSetIsExportOpen, useEditorState } from "../state/0-ui-store";
 
 function inspect(motionId: string) {
     chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Leva, LevaInputs, useControls } from "leva";
 import { bezier } from "@leva-ui/plugin-bezier";
 import { shallow } from "../utils/shallow";
-import { sortKeyframesByOffset, toBezierHandles } from "../state/keyframe-utils";
+import { sortKeyframesByOffset, toBezierHandles } from "../state/8-keyframe-utils";
 import {
     getDeleteKeyframe,
     getHistory,
@@ -10,7 +10,7 @@ import {
     getUpdateKeyframe,
     getUpdateKeyframeEasing,
     useEditorState,
-} from "../state/store";
+} from "../state/0-ui-store";
 import type { EditorStore, KeyframeData, KeyframeMetadata } from "../types";
 import { TrashIcon } from "./8-icons";
 

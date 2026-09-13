@@ -1,6 +1,6 @@
-import type { AnimationMetadata, AnimationSource, KeyframeData, RecordedAnimations, ValueAnimationRecord } from "@/9-shared/types";
+import { type AnimationMetadata, type AnimationSource, type KeyframeData, type RecordedAnimations, type ValueAnimationRecord } from "@/9-shared/types";
 
-export type { AnimationMetadata, AnimationSource, KeyframeData, RecordedAnimations, ValueAnimationRecord };
+export { type AnimationMetadata, type AnimationSource, type KeyframeData, type RecordedAnimations, type ValueAnimationRecord };
 
 export interface TimestampedKeyframe extends KeyframeData {
     time: number;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { type ExtensionMessage } from "@/9-shared/messages";
-import { getAddAnimations, getClear, getIsRecording, getSelectedAnimation, getSelectedAnimationName, useEditorState } from "../state/store";
+import { getAddAnimations, getClear, getIsRecording, getSelectedAnimation, getSelectedAnimationName, useEditorState } from "../state/0-ui-store";
 import { injectClientIntoInspectedPage } from "./inject-client";
 
 export function usePort() {
@@ -39,7 +39,7 @@ export function usePort() {
                         reconnectTimer = setTimeout(connect, 0);
                     }
                 );
-                
+
                 setPort(nextPort);
                 injectClientIntoInspectedPage();
             };

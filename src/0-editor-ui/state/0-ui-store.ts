@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { current, produce } from "immer";
 import { createStore } from "zustand/vanilla";
-import type { AnimationMetadata, EditorStore, KeyframeMetadata, RecordedAnimations } from "../types";
+import { current, produce } from "immer";
+import { type AnimationMetadata, type EditorStore, type KeyframeMetadata, type RecordedAnimations } from "../types";
 import {
     compareKeyframeByTime,
     defaultTransitionOptionsUi,
@@ -12,7 +12,7 @@ import {
     shallowCompare,
     snapNumberToNearest,
     updateValueAnimation,
-} from "./keyframe-utils";
+} from "./8-keyframe-utils";
 
 //---------------------------------------------------------------------------
 // Getters
@@ -45,81 +45,89 @@ export const getIsRecording = (state: EditorStore) => state.isRecording;
 //---------------------------------------------------------------------------
 // History
 
-type SetState = (partial: Partial<EditorStore> | ((state: EditorStore) => Partial<EditorStore>)) => void;
 type GetState = () => EditorStore;
+type SetState = (partial: Partial<EditorStore> | ((state: EditorStore) => Partial<EditorStore>)) => void;
 
-const withHistory =
-    (createState: (set: SetState, get: GetState) => Omit<EditorStore, "undo" | "redo" | "enableHistory">) =>
-        (set: SetState, get: GetState) => {
-            let isEnabled = true;
-            const prev: Record<string, unknown[]> = {};
-            const next: Record<string, unknown[]> = {};
+function withHistory(createState: (set: SetState, get: GetState) => Omit<EditorStore, "undo" | "redo" | "enableHistory">) {
+    return (set: SetState, get: GetState) => {
+        let isEnabled = true;
+        const prev: Record<string, unknown[]> = {};
+        const next: Record<string, unknown[]> = {};
 
-            const changeHistory =
-                (
-                    getHistoryItem: (prevBuffer: unknown[], nextBuffer: unknown[], currentAnimation: unknown) => unknown,
-                    amendHistory: (prevBuffer: unknown[], nextBuffer: unknown[], currentAnimation: unknown) => void,
-                ) =>
-                    () => {
-                        const { animations, selectedAnimationName = "" } = get();
-                        const prevBuffer = prev[selectedAnimationName] || [];
-                        const nextBuffer = next[selectedAnimationName] || [];
-                        set({
-                            animations: produce(animations, (draft) => {
-                                const animation = draft[selectedAnimationName];
-                                if (!animation) return;
-                                const currentAnimation = current(animation.elements);
-                                if (!currentAnimation) return;
-                                const historyAnimation = getHistoryItem(prevBuffer, nextBuffer, currentAnimation);
-                                if (historyAnimation) {
-                                    animation.elements = historyAnimation as AnimationMetadata["elements"];
-                                    amendHistory(prevBuffer, nextBuffer, currentAnimation);
-                                }
-                            }),
-                        });
-                    };
+        const changeHistory = (
+            getHistoryItem: (prevBuffer: unknown[], nextBuffer: unknown[], currentAnimation: unknown) => unknown,
+            amendHistory: (prevBuffer: unknown[], nextBuffer: unknown[], currentAnimation: unknown) => void
+        ) => () => {
+            const { animations, selectedAnimationName = "" } = get();
+            const prevBuffer = prev[selectedAnimationName] || [];
+            const nextBuffer = next[selectedAnimationName] || [];
+            set({
+                animations: produce(animations, (draft) => {
+                    const animation = draft[selectedAnimationName];
+                    if (!animation) {
+                        return;
+                    }
+                    const currentAnimation = current(animation.elements);
+                    if (!currentAnimation) {
+                        return;
+                    }
+                    const historyAnimation = getHistoryItem(prevBuffer, nextBuffer, currentAnimation);
+                    if (historyAnimation) {
+                        animation.elements = historyAnimation as AnimationMetadata["elements"];
+                        amendHistory(prevBuffer, nextBuffer, currentAnimation);
+                    }
+                }),
+            });
+        };
 
-            const enableHistory = (newIsEnabled: boolean) => {
-                if (newIsEnabled === isEnabled) return;
-                isEnabled = newIsEnabled;
-                if (!isEnabled) {
-                    changeHistory(
-                        (_prev, _next, currentAnimation) => currentAnimation,
-                        (prevBuffer, nextBuffer, currentAnimation) => {
-                            if (prevBuffer[prevBuffer.length - 1] !== currentAnimation) {
-                                prevBuffer.push(currentAnimation);
-                                nextBuffer.length = 0;
-                            }
-                        },
-                    )();
-                }
-            };
+        const enableHistory = (newIsEnabled: boolean) => {
+            if (newIsEnabled === isEnabled) {
+                return;
+            }
+            isEnabled = newIsEnabled;
+            if (!isEnabled) {
+                changeHistory(
+                    (_prev, _next, currentAnimation) => currentAnimation,
+                    (prevBuffer, nextBuffer, currentAnimation) => {
+                        if (prevBuffer[prevBuffer.length - 1] !== currentAnimation) {
+                            prevBuffer.push(currentAnimation);
+                            nextBuffer.length = 0;
+                        }
+                    }
+                )();
+            }
+        };
 
-            const undo = changeHistory(
-                (prevBuffer) => prevBuffer[prevBuffer.length - 1],
-                (prevBuffer, nextBuffer, currentAnimation) => {
-                    prevBuffer.length -= 1;
-                    nextBuffer.unshift(currentAnimation);
-                },
-            );
-            const redo = changeHistory(
-                (_prev, nextBuffer) => nextBuffer[0],
-                (prevBuffer, nextBuffer, currentAnimation) => {
-                    prevBuffer.push(currentAnimation);
-                    nextBuffer.splice(0, 1);
-                },
-            );
+        const undo = changeHistory(
+            (prevBuffer) => prevBuffer[prevBuffer.length - 1],
+            (prevBuffer, nextBuffer, currentAnimation) => {
+                prevBuffer.length -= 1;
+                nextBuffer.unshift(currentAnimation);
+            }
+        );
+        const redo = changeHistory(
+            (_prev, nextBuffer) => nextBuffer[0],
+            (prevBuffer, nextBuffer, currentAnimation) => {
+                prevBuffer.push(currentAnimation);
+                nextBuffer.splice(0, 1);
+            }
+        );
 
-            const wrappedSet: SetState = (args) => {
+        const wrappedSet: SetState =
+            (args) => {
                 const selectedAnimationName = (typeof args === "function" ? args(get()) : args).selectedAnimationName || get().selectedAnimationName;
+
                 const prevState = selectedAnimationName ? get().animations[selectedAnimationName]?.elements : undefined;
+                
                 set({ undo, redo, enableHistory });
                 set(args);
 
                 const currentState = selectedAnimationName ? get().animations[selectedAnimationName]?.elements : undefined;
+
                 if (!isEnabled || !selectedAnimationName || prevState === currentState) {
                     return;
                 }
+                
                 if (prevState === undefined) {
                     prev[selectedAnimationName] = [];
                 }
@@ -128,16 +136,17 @@ const withHistory =
                 if (prevState) {
                     prevBuffer.push(prevState);
                 }
-                next[selectedAnimationName] = [];
+                next[selectedAnimationName] = [];``
             };
 
-            return {
-                ...createState(wrappedSet, get),
-                undo,
-                redo,
-                enableHistory,
-            };
+        return {
+            ...createState(wrappedSet, get),
+            undo,
+            redo,
+            enableHistory,
         };
+    };
+}
 
 //---------------------------------------------------------------------------
 // Editor Store
@@ -330,7 +339,7 @@ function useEditorState<T>(selector: Selector<T>, equalityFn: EqualityFn<T> = Ob
 
     useEffect(() => {
         let active = true;
-        
+
         const sync = (state: EditorStore) => {
             if (!active) {
                 return;

@@ -1,4 +1,4 @@
-import { camelToPipe, defaultOffset, defaultTransitionOptionsUi, pipeToCamel, sortKeyframesByOffset } from "../state/keyframe-utils";
+import { camelToPipe, defaultOffset, defaultTransitionOptionsUi, pipeToCamel, sortKeyframesByOffset } from "../state/8-keyframe-utils";
 import type { AnimationMetadata } from "../types";
 
 const noopReturn = <T>(value: T) => value;

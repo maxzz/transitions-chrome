@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { type EditorStore } from "../types";
-import { useEditorState } from "../state/store";
+import { useEditorState } from "../state/0-ui-store";
 
 export function useKeyboardShortcuts() {
     useEffect(

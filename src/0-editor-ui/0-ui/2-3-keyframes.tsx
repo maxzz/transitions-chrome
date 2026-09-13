@@ -5,8 +5,8 @@ import { shallow } from "../utils/shallow";
 import { RepeatIcon } from "./8-icons";
 
 import { type AnimationMetadata, type DragOrigin, type EditorStore, type KeyframeMetadata, type ValueAnimationRecord } from "../types";
-import { sortKeyframesByOffset } from "../state/keyframe-utils";
-import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/store";
+import { sortKeyframesByOffset } from "../state/8-keyframe-utils";
+import { getHistory, getMoveKeyframe, getTimeScale, useEditorState } from "../state/0-ui-store";
 import { sidebarWidth, ValueMarker } from "./8-shared-components";
 
 export function Keyframes({ animation, containerRef }: { animation: AnimationMetadata; containerRef: MutableRefObject<HTMLElement | null>; }) {

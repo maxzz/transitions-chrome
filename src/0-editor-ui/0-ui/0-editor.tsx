@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import { useKeyboardShortcuts } from "../chrome/keyboard";
 import { usePort } from "../chrome/port";
-import { useEditorState } from "../state/store";
+import { useEditorState } from "../state/0-ui-store";
 import type { EditorStore } from "../types";
 import { Instructions } from "./1-1-instructions";
 import { KeyframeEditPanel } from "./2-5-keyframe-leva-controls";

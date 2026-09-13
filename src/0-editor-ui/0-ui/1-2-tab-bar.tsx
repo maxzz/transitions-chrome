@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { shallow } from "../utils/shallow";
-import { useEditorState } from "../state/store";
+import { useEditorState } from "../state/0-ui-store";
 import type { EditorStore } from "../types";
 import { RecordIcon } from "./8-icons";
 
