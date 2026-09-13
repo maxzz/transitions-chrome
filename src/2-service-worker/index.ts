@@ -3,6 +3,9 @@ import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-cl
 
 //---------------------------------------------------------------------------
 
+const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client"; // This should be ahead of call to pageClientFile()
+const PAGE_BRIDGE_SCRIPT_ID = "transitions-chrome-page-bridge"; // This should be ahead of call to pageClientFile() 
+
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
 const clientConnections = new Map<number, Map<number, chrome.runtime.Port>>();
 
@@ -18,19 +21,19 @@ function pageClientFile() {
     return getPageClientFile();
 }
 
-const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
-
 async function registerPageClient() {
     if (!chrome.scripting?.registerContentScripts) {
         return;
     }
+    
     try {
         await chrome.scripting.unregisterContentScripts({
-            ids: [PAGE_CLIENT_SCRIPT_ID, "transitions-chrome-page-bridge"],
+            ids: [PAGE_CLIENT_SCRIPT_ID, PAGE_BRIDGE_SCRIPT_ID],
         });
     } catch {
         // Not registered yet.
     }
+
     const scripts: chrome.scripting.RegisteredContentScript[] = [
         {
             id: PAGE_CLIENT_SCRIPT_ID,
@@ -42,7 +45,7 @@ async function registerPageClient() {
             persistAcrossSessions: true,
         },
         {
-            id: "transitions-chrome-page-bridge",
+            id: PAGE_BRIDGE_SCRIPT_ID,
             js: [getPageBridgeFile()],
             matches: ["http://*/*", "https://*/*", "file:///*"],
             allFrames: true,
@@ -51,6 +54,7 @@ async function registerPageClient() {
             persistAcrossSessions: true,
         },
     ];
+
     for (const script of scripts) {
         try {
             await chrome.scripting.registerContentScripts([script]);
