@@ -1,4 +1,4 @@
-import { store } from "../store";
+import { store } from "../8-0-store";
 import { recordCssAnimation } from "./css-animation";
 import { recordCssTransition } from "./css-transition";
 import { isAnimationRecorded, markAnimationRecorded } from "./recorded-animations";

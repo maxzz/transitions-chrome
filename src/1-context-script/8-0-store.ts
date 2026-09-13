@@ -7,7 +7,7 @@ import type {
     AnimationSource,
     RecordedAnimations,
 } from "@/9-shared/types";
-import { getElementId } from "./element-id";
+import { getElementId } from "./8-1-element-id";
 import { defaultOffset, defaults, fillOffset, isEasingGenerator, isEasingList } from "./runtime/utils";
 
 export interface ClientState {

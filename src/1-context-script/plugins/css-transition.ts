@@ -1,6 +1,6 @@
 import type { RecordPlugin, ValueAnimationDraft } from "@/9-shared/types";
 import { getEasingPoints, pipeToCamel } from "../runtime/utils";
-import { store } from "../store";
+import { store } from "../8-0-store";
 import { markAnimationRecorded } from "./recorded-animations";
 
 const splitTransitions = (transitions: string) => transitions.split(/,\s*(?!\s*\d)/);

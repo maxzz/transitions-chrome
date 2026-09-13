@@ -1,5 +1,5 @@
 import { isExtensionMessage } from "@/9-shared/messages";
-import { store } from "./store";
+import { store } from "../8-0-store";
 
 export function handleMessages(onReadyRequest?: () => void) {
     window.addEventListener("message", ({ source, data }) => {
