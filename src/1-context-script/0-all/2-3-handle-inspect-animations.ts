@@ -1,7 +1,7 @@
 import type { AnimationMetadata } from "@/9-shared/types";
-import { animateStyle } from "../runtime/animate-style";
-import { pipeToCamel, sortKeyframesByOffset } from "../runtime/utils";
-import { transformNames } from "../runtime/style";
+import { animateStyle } from "../runtime/1-animate-style";
+import { pipeToCamel, sortKeyframesByOffset } from "../runtime/4-utils";
+import { transformNames } from "../runtime/2-style";
 import { store } from "../8-0-store";
 
 type ScrubbableAnimation = {

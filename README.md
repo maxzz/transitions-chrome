@@ -91,7 +91,6 @@ src/
     recording.ts          Plugin start/stop + flush to the bridge
     messages.ts           Page-world handlers for isrecording / inspect / scrub
     inspect.ts            Apply an inspected animation to the DOM
-    element-id.ts         Stable data-motion-id on recorded elements
     plugins/
       css-animation.ts    CSSAnimation via animationstart
       css-transition.ts   CSSTransition via transitionrun / transitionstart

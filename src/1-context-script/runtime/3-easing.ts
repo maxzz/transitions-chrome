@@ -1,10 +1,12 @@
-import { clamp, isEasingList, noopReturn, wrap } from "./utils";
+import { clamp, isEasingList, noopReturn, wrap } from "./4-utils";
 
-const calcBezier = (t: number, a1: number, a2: number) =>
-    (((1.0 - 3.0 * a2 + 3.0 * a1) * t + (3.0 * a2 - 6.0 * a1)) * t + 3.0 * a1) * t;
-
-const subdivisionPrecision = 0.0000001;
-const subdivisionMaxIterations = 12;
+export function cubicBezier(mX1: number, mY1: number, mX2: number, mY2: number) {
+    if (mX1 === mY1 && mX2 === mY2) {
+        return noopReturn;
+    }
+    const getTForX = (aX: number) => binarySubdivide(aX, 0, 1, mX1, mX2);
+    return (t: number) => (t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2));
+}
 
 function binarySubdivide(x: number, lowerBound: number, upperBound: number, mX1: number, mX2: number) {
     let currentX;
@@ -22,24 +24,24 @@ function binarySubdivide(x: number, lowerBound: number, upperBound: number, mX1:
     return currentT;
 }
 
-export function cubicBezier(mX1: number, mY1: number, mX2: number, mY2: number) {
-    if (mX1 === mY1 && mX2 === mY2) return noopReturn;
-    const getTForX = (aX: number) => binarySubdivide(aX, 0, 1, mX1, mX2);
-    return (t: number) => (t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2));
+const subdivisionPrecision = 0.0000001;
+const subdivisionMaxIterations = 12;
+
+const calcBezier = (t: number, a1: number, a2: number) => (((1.0 - 3.0 * a2 + 3.0 * a1) * t + (3.0 * a2 - 6.0 * a1)) * t + 3.0 * a1) * t;
+
+//---------------------------------------------------------------------------
+
+export function steps(stepCount: number, direction: "end" | "start" = "end") {
+    return (progressValue: number) => {
+        const nextProgress = direction === "end" ? Math.min(progressValue, 0.999) : Math.max(progressValue, 0.001);
+        const expanded = nextProgress * stepCount;
+        const rounded = direction === "end" ? Math.floor(expanded) : Math.ceil(expanded);
+        return clamp(0, 1, rounded / stepCount);
+    };
 }
 
-export const steps =
-    (stepCount: number, direction: "end" | "start" = "end") =>
-        (progressValue: number) => {
-            const nextProgress =
-                direction === "end" ? Math.min(progressValue, 0.999) : Math.max(progressValue, 0.001);
-            const expanded = nextProgress * stepCount;
-            const rounded = direction === "end" ? Math.floor(expanded) : Math.ceil(expanded);
-            return clamp(0, 1, rounded / stepCount);
-        };
-
 const namedEasings: Record<string, (t: number) => number> = {
-    ease: cubicBezier(0.25, 0.1, 0.25, 1.0),
+    "ease": cubicBezier(0.25, 0.1, 0.25, 1.0),
     "ease-in": cubicBezier(0.42, 0.0, 1.0, 1.0),
     "ease-in-out": cubicBezier(0.42, 0.0, 0.58, 1.0),
     "ease-out": cubicBezier(0.0, 0.0, 0.58, 1.0),
@@ -48,7 +50,9 @@ const namedEasings: Record<string, (t: number) => number> = {
 const functionArgsRegex = /\((.*?)\)/;
 
 export function getEasingFunction(definition: unknown): (t: number) => number {
-    if (typeof definition === "function") return definition as (t: number) => number;
+    if (typeof definition === "function") {
+        return definition as (t: number) => number;
+    }
     if (Array.isArray(definition)) {
         const [a, b, c, d] = definition as number[];
         return cubicBezier(a, b, c, d);
@@ -70,10 +74,14 @@ export function getEasingForSegment(easing: unknown, i: number) {
     return isEasingList(easing) ? easing[wrap(0, easing.length, i)] : easing;
 }
 
-export const convertEasing = (easing: unknown) =>
-    Array.isArray(easing) && typeof easing[0] === "number"
-        ? cubicBezierAsString(easing as [number, number, number, number])
-        : easing;
+export function convertEasing(easing: unknown) {
+    return (
+        Array.isArray(easing) && typeof easing[0] === "number"
+            ? cubicBezierAsString(easing as [number, number, number, number])
+            : easing
+    );
+}
 
-export const cubicBezierAsString = ([a, b, c, d]: [number, number, number, number]) =>
-    `cubic-bezier(${a}, ${b}, ${c}, ${d})`;
+export function cubicBezierAsString([a, b, c, d]: [number, number, number, number]) {
+    return `cubic-bezier(${a}, ${b}, ${c}, ${d})`;
+}

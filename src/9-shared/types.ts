@@ -61,6 +61,8 @@ export interface ValueAnimationDraft {
     options: AnimationOptions;
 }
 
+//---------------------------------------------------------------------------
+
 declare global {
     interface Window {
         __MOTION_BRIDGE_HAS_LOADED?: boolean;
@@ -68,5 +70,3 @@ declare global {
         __MOTION_DEV_TOOLS_RECORD?: RecordAnimationFn;
     }
 }
-
-export { };

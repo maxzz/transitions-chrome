@@ -1,6 +1,6 @@
 import type { RecordPlugin, ValueAnimationDraft } from "@/9-shared/types";
 import { store } from "../8-0-store";
-import { getEasingPoints, time } from "../runtime/utils";
+import { getEasingPoints, timeConvert } from "../runtime/4-utils";
 import { markAnimationRecorded } from "./2-utils-recorded-animations";
 
 export const cssAnimation: RecordPlugin = {
@@ -32,7 +32,7 @@ export function recordCssAnimation(cssAnimation: CSSAnimation, target: Element):
     }
 
     const animationTiming = (cssAnimation.effect as KeyframeEffect).getComputedTiming();
-    const duration = time.s(Number(animationTiming.duration) || 0);
+    const duration = timeConvert.s(Number(animationTiming.duration) || 0);
     const iterations = animationTiming.iterations;
     const repeat = iterations === Infinity ? "Infinity" : Math.max(0, (iterations ?? 1) - 1);
     const animationKeyframes = (cssAnimation.effect as KeyframeEffect).getKeyframes();

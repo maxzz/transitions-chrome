@@ -1,20 +1,20 @@
 import { type AnimationOptions, type AnimationSource } from "@/9-shared/types";
-import { convertEasing, getEasingForSegment, getEasingFunction } from "./easing";
-import { addTransformToElement, getAnimationData, getMotionValue, getStyleName, isCssVar, isTransform, registerCssVariable, stopAnimation, style, transformDefinitions, type AnimationLike } from "./style";
-import { defaults, hydrateKeyframes, isEasingGenerator, isEasingList, isNumber, keyframesList, mix, noop, noopReturn, progress, time, defaultOffset, fillOffset } from "./utils";
+import { convertEasing, getEasingForSegment, getEasingFunction } from "./3-easing";
+import { addTransformToElement, getAnimationData, getMotionValue, getStyleName, isCssVar, isTransform, registerCssVariable, stopAnimation, styleAccess, transformCssDefinitions, type AnimationLike } from "./2-style";
+import { defaultTransitionOptions, hydrateKeyframes, isEasingGenerator, isEasingList, isNumber, keyframesList, mix, noop, noopReturn, progress, timeConvert, defaultOffset, fillOffset } from "./4-utils";
 
-export type { JSAnimation };
+export { type JSAnimation };
 
 export function animateStyle(element: HTMLElement, key: string, keyframesDefinition: unknown, options: AnimationOptions = {}) {
     const record = getDevToolsRecord();
     const isRecording = options.record !== false && record;
     let animation: AnimationLike | JSAnimation | undefined;
     let {
-        duration = defaults.duration,
-        delay = defaults.delay,
-        endDelay = defaults.endDelay,
-        repeat = defaults.repeat,
-        easing = defaults.easing,
+        duration = defaultTransitionOptions.duration,
+        delay = defaultTransitionOptions.delay,
+        endDelay = defaultTransitionOptions.endDelay,
+        repeat = defaultTransitionOptions.repeat,
+        easing = defaultTransitionOptions.easing,
         direction,
         offset,
         allowWebkitAcceleration = false,
@@ -23,31 +23,23 @@ export function animateStyle(element: HTMLElement, key: string, keyframesDefinit
     const data = getAnimationData(element);
     let canAnimateNatively = supports.waapi();
     const valueIsTransform = isTransform(key);
-    if (valueIsTransform) addTransformToElement(element, key);
+    if (valueIsTransform) {
+        addTransformToElement(element, key);
+    }
 
     const name = getStyleName(key);
     const motionValue = getMotionValue(data.values, name);
-    const definition = transformDefinitions.get(name);
+    const definition = transformCssDefinitions.get(name);
 
     stopAnimation(motionValue.animation, !(isEasingGenerator(easing) && motionValue.generator) && options.record !== false);
 
     return () => {
-        const readInitialValue = () => style.get(element, name) ?? definition?.initialValue ?? 0;
+        const readInitialValue = () => styleAccess.get(element, name) ?? definition?.initialValue ?? 0;
 
         let keyframes = hydrateKeyframes(keyframesList(keyframesDefinition), readInitialValue);
 
         if (isEasingGenerator(easing)) {
-            const custom = (
-                easing as {
-                    createAnimation: (
-                        frames: unknown[],
-                        read: () => unknown,
-                        isTransformValue: boolean,
-                        valueName?: string,
-                        value?: unknown,
-                    ) => { easing: unknown; keyframes?: unknown[]; duration?: number; };
-                }
-            ).createAnimation(keyframes, readInitialValue, valueIsTransform, name, motionValue);
+            const custom = (easing as EasingGenerator).createAnimation(keyframes, readInitialValue, valueIsTransform, name, motionValue);
             easing = custom.easing;
             if (custom.keyframes !== undefined) keyframes = custom.keyframes;
             if (custom.duration !== undefined) duration = custom.duration;
@@ -71,9 +63,9 @@ export function animateStyle(element: HTMLElement, key: string, keyframesDefinit
             }
 
             const animationOptions: KeyframeAnimationOptions = {
-                delay: time.ms(delay),
-                duration: time.ms(duration),
-                endDelay: time.ms(endDelay),
+                delay: timeConvert.ms(delay),
+                duration: timeConvert.ms(duration),
+                endDelay: timeConvert.ms(endDelay),
                 easing: !isEasingList(easing) ? (convertEasing(easing) as string) : undefined,
                 direction,
                 iterations: (typeof repeat === "number" ? repeat : 0) + 1,
@@ -102,7 +94,7 @@ export function animateStyle(element: HTMLElement, key: string, keyframesDefinit
             const target = keyframes[keyframes.length - 1];
             animation.finished
                 .then(() => {
-                    style.set(element, name, target as string | number);
+                    styleAccess.set(element, name, target as string | number);
                     animation?.cancel();
                 })
                 .catch(noop);
@@ -114,12 +106,12 @@ export function animateStyle(element: HTMLElement, key: string, keyframesDefinit
             }
             const render = (latest: number) => {
                 const next = definition ? definition.toDefaultUnit(latest) : latest;
-                style.set(element, name, next);
+                styleAccess.set(element, name, next);
             };
             animation = new JSAnimation(render, keyframes as number[], { ...options, duration, easing });
         } else {
             const target = keyframes[keyframes.length - 1];
-            style.set(element, name, definition && isNumber(target) ? definition.toDefaultUnit(target) : (target as string | number));
+            styleAccess.set(element, name, definition && isNumber(target) ? definition.toDefaultUnit(target) : (target as string | number));
         }
 
         if (isRecording && record) {
@@ -130,6 +122,16 @@ export function animateStyle(element: HTMLElement, key: string, keyframesDefinit
         return animation;
     };
 }
+
+type EasingGenerator<TKeyframe = unknown> = {
+    createAnimation: (
+        frames: TKeyframe[],
+        read: () => unknown,
+        isTransformValue: boolean,
+        valueName?: string,
+        value?: unknown,
+    ) => { easing: unknown; keyframes?: TKeyframe[]; duration?: number; };
+};
 
 function getDevToolsRecord() {
     return window.__MOTION_DEV_TOOLS_RECORD;
@@ -154,11 +156,11 @@ class JSAnimation {
         output: (latest: number) => void,
         keyframes: number[] = [0, 1],
         {
-            easing = defaults.easing,
-            duration = defaults.duration,
-            delay = defaults.delay,
-            endDelay = defaults.endDelay,
-            repeat = defaults.repeat,
+            easing = defaultTransitionOptions.easing,
+            duration = defaultTransitionOptions.duration,
+            delay = defaultTransitionOptions.delay,
+            endDelay = defaultTransitionOptions.endDelay,
+            repeat = defaultTransitionOptions.repeat,
             offset,
             direction = "normal",
         }: AnimationOptions = {},
@@ -173,15 +175,7 @@ class JSAnimation {
         let nextDuration = duration;
 
         if (isEasingGenerator(nextEasing)) {
-            const custom = (
-                nextEasing as {
-                    createAnimation: (
-                        frames: number[],
-                        read: () => string,
-                        isTransform: boolean,
-                    ) => { easing: unknown; keyframes?: number[]; duration?: number; };
-                }
-            ).createAnimation(nextKeyframes, () => "0", true);
+            const custom = (nextEasing as EasingGenerator<number>).createAnimation(nextKeyframes, () => "0", true);
             nextEasing = custom.easing;
             if (custom.keyframes !== undefined) nextKeyframes = custom.keyframes;
             if (custom.duration !== undefined) nextDuration = custom.duration;

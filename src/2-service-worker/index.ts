@@ -1,9 +1,18 @@
-import type { DevToolsToBackgroundMessage, ExtensionMessage } from "@/9-shared/messages";
-import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-file";
+import { type DevToolsToBackgroundMessage, type ExtensionMessage } from "@/9-shared/messages";
+import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-filenames";
 
-const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
+//---------------------------------------------------------------------------
+
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
 const clientConnections = new Map<number, Map<number, chrome.runtime.Port>>();
+
+registerPageClient();
+
+chrome.runtime.onConnect.addListener(handleNewConnections);
+chrome.runtime.onMessage.addListener(forwardClientMessagesToDevTools);
+chrome.webNavigation.onCommitted.addListener(clearTimelineOnReload, { url: [{ urlPrefix: "http" }, { urlPrefix: "localhost" }] });
+
+//---------------------------------------------------------------------------
 
 function pageClientFile() {
     return getPageClientFile();
@@ -47,26 +56,21 @@ async function registerPageClient() {
     }
 }
 
-function injectIntoTab(
-    tabId: number,
-    file: string,
-    world: "MAIN" | "ISOLATED",
-    frameId?: number,
-) {
-    if (!chrome.scripting?.executeScript) return;
+const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client";
+
+function injectIntoTab(tabId: number, file: string, world: "MAIN" | "ISOLATED", frameId?: number) {
+    if (!chrome.scripting?.executeScript) {
+        return;
+    }
     const target: chrome.scripting.InjectionTarget =
         typeof frameId === "number"
             ? { tabId, frameIds: [frameId] }
             : { tabId, allFrames: true };
     return chrome.scripting
-        .executeScript({
-            target,
-            files: [file],
-            world,
-            injectImmediately: true,
-        })
-        .catch(() => {
+        .executeScript({ target, files: [file], world, injectImmediately: true, })
+        .catch((error) => {
             // chrome://, Web Store, and other restricted pages reject injection.
+            console.error("Failed to inject into tab", error);
         });
 }
 
@@ -77,7 +81,7 @@ function injectPageClient(tabId: number, frameId?: number) {
     ]);
 }
 
-registerPageClient();
+//---------------------------------------------------------------------------
 
 function getClientConnections(tabId: number) {
     let connections = clientConnections.get(tabId);
@@ -96,18 +100,20 @@ function sendMessageToClient(message: ExtensionMessage & { tabId: number; }, ret
         }
         return;
     }
+
     try {
-        tabConnections.forEach((connection) => {
-            connection.postMessage(message);
-        });
+        tabConnections.forEach((connection) => { connection.postMessage(message); });
     } catch {
         clientConnections.delete(message.tabId);
-        if (retry) sendMessageToClient(message, false);
+        if (retry) {
+            sendMessageToClient(message, false);
+        }
     }
 }
 
 function handleClientPort(port: chrome.runtime.Port, manualTabId?: number) {
-    const listener = (message: ExtensionMessage, { sender }: chrome.runtime.Port) => {
+
+    function listener(message: ExtensionMessage, { sender }: chrome.runtime.Port) {
         const tabId = sender?.tab?.id ?? manualTabId;
         const frameId = sender?.frameId ?? 0;
 
@@ -146,13 +152,14 @@ function handleClientPort(port: chrome.runtime.Port, manualTabId?: number) {
 
         const devToolsPort = devToolsConnections.get(tabId);
         if (devToolsPort) devToolsPort.postMessage(message);
-    };
+    }
 
     port.onMessage.addListener(listener);
 }
 
 function handleDevToolsPort(port: chrome.runtime.Port) {
-    const listener = (message: DevToolsToBackgroundMessage) => {
+
+    function listener(message: DevToolsToBackgroundMessage) {
         switch (message.type) {
             case "init": {
                 devToolsConnections.set(message.tabId, port);
@@ -178,14 +185,19 @@ function handleDevToolsPort(port: chrome.runtime.Port) {
                 return;
             }
         }
-    };
+    }
 
     port.onMessage.addListener(listener);
+
     port.onDisconnect.addListener(() => {
         port.onMessage.removeListener(listener);
-        devToolsConnections.forEach((connection, id) => {
-            if (connection === port) devToolsConnections.delete(id);
-        });
+        devToolsConnections.forEach(
+            (connection, id) => {
+                if (connection === port) {
+                    devToolsConnections.delete(id);
+                }
+            }
+        );
     });
 }
 
@@ -202,7 +214,9 @@ function handleNewConnections(port: chrome.runtime.Port, manualTabId?: number) {
 }
 
 function clearTimelineOnReload(event: chrome.webNavigation.WebNavigationTransitionCallbackDetails) {
-    if (event.frameId !== 0) return;
+    if (event.frameId !== 0) {
+        return;
+    }
     const devToolsPort = devToolsConnections.get(event.tabId);
     if (devToolsPort) {
         devToolsPort.postMessage({ type: "clear" });
@@ -210,21 +224,15 @@ function clearTimelineOnReload(event: chrome.webNavigation.WebNavigationTransiti
     }
 }
 
-function forwardClientMessagesToDevTools(
-    request: ExtensionMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: boolean) => void,
-) {
+function forwardClientMessagesToDevTools(request: ExtensionMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: boolean) => void) {
     sendResponse(true);
-    if (!sender.tab) return;
+    if (!sender.tab) {
+        return;
+    }
     const { id } = sender.tab;
-    if (typeof id !== "number") return;
+    if (typeof id !== "number") {
+        return;
+    }
     const connection = devToolsConnections.get(id);
     connection?.postMessage(request);
 }
-
-chrome.runtime.onConnect.addListener(handleNewConnections);
-chrome.runtime.onMessage.addListener(forwardClientMessagesToDevTools);
-chrome.webNavigation.onCommitted.addListener(clearTimelineOnReload, {
-    url: [{ urlPrefix: "http" }, { urlPrefix: "localhost" }],
-});

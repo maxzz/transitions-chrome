@@ -1,8 +1,34 @@
 import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/9-shared/messages";
 import { isExtensionMessage } from "@/9-shared/messages";
-import { getPageClientFile } from "./page-client-file";
+import { getPageClientFile } from "./page-client-filenames";
+
+//---------------------------------------------------------------------------
+// Flow:
+// 1. Inject page client
+// 2. Connect to background
+
+// 3. Handle messages from web page
+// 4. Handle messages from background
+
+// 5. Handle messages from dev tools
+// 6. Handle messages from web page
+
+// 7. Handle messages from background
+// 8. Handle messages from dev tools
 
 window.__MOTION_BRIDGE_HAS_LOADED = true;
+
+injectPageClient();
+
+let backgroundPort: chrome.runtime.Port | undefined;
+
+connect();
+chrome.runtime.onConnect.addListener(bindPortListeners);
+
+window.addEventListener("message", handleMessagesFromWebPage, false);
+window.postMessage({ type: "requestclientready" }, "*");
+
+//---------------------------------------------------------------------------
 
 function injectPageClient() {
     const url = chrome.runtime.getURL(getPageClientFile());
@@ -11,6 +37,7 @@ function injectPageClient() {
         const request = new XMLHttpRequest();
         request.open("GET", url, false);
         request.send();
+
         if (request.status === 200 && request.responseText) {
             const script = document.createElement("script");
             script.textContent = request.responseText;
@@ -29,39 +56,7 @@ function injectPageClient() {
     script.addEventListener("load", () => script.remove());
 }
 
-injectPageClient();
-
-let backgroundPort: chrome.runtime.Port | undefined;
-
-function bindPortListeners(port: chrome.runtime.Port) {
-    backgroundPort = port;
-
-    port.onMessage.addListener((backgroundMessage: BackgroundToPageMessage) => {
-        switch (backgroundMessage.type) {
-            case "tabId": {
-                return;
-            }
-            case "isrecording":
-            case "inspectanimation":
-            case "scrubanimation": {
-                window.postMessage(backgroundMessage, "*");
-            }
-        }
-    });
-
-    port.onDisconnect.addListener(() => {
-        backgroundPort = undefined;
-    });
-}
-
-function connect() {
-    bindPortListeners(chrome.runtime.connect({ name: "client" }));
-}
-
-connect();
-chrome.runtime.onConnect.addListener(bindPortListeners);
-
-const handleMessagesFromWebPage = (event: MessageEvent) => {
+function handleMessagesFromWebPage(event: MessageEvent) {
     if (event.source !== window) return;
     if (!isExtensionMessage(event.data)) return;
 
@@ -75,7 +70,27 @@ const handleMessagesFromWebPage = (event: MessageEvent) => {
             backgroundPort?.postMessage(event.data as PageToBackgroundMessage);
         }
     }
-};
+}
 
-window.addEventListener("message", handleMessagesFromWebPage, false);
-window.postMessage({ type: "requestclientready" }, "*");
+function connect() {
+    bindPortListeners(chrome.runtime.connect({ name: "client" }));
+}
+
+function bindPortListeners(port: chrome.runtime.Port) {
+    backgroundPort = port;
+
+    port.onMessage.addListener((backgroundMessage: BackgroundToPageMessage) => {
+        switch (backgroundMessage.type) {
+            case "tabId": return;
+            case "isrecording":
+            case "inspectanimation":
+            case "scrubanimation": {
+                window.postMessage(backgroundMessage, "*");
+            }
+        }
+    });
+
+    port.onDisconnect.addListener(() => {
+        backgroundPort = undefined;
+    });
+}
