@@ -111,9 +111,9 @@ function ScrubberIcon() {
 }
 
 function generateMarkers(totalWidth: number, scale: number) {
-    if (!totalWidth) return null;
-    const numVisibleSeconds = totalWidth / scale;
-    const numMarkers = Math.ceil(numVisibleSeconds / increment);
+    if (!totalWidth || !scale) return null;
+    const step = increment * scale;
+    const numMarkers = Math.max(0, Math.floor(totalWidth / step));
     const markers = [];
     for (let i = 0; i < numMarkers; i += 1) {
         const time = increment * i;
