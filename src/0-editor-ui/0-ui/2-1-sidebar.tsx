@@ -4,11 +4,7 @@ import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
 import { getSetIsExportOpen, useEditorState } from "../state/0-ui-store";
 
 function inspect(motionId: string) {
-    try {
-        chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
-    } catch {
-        // DevTools page outlived a reload.
-    }
+    chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
 }
 
 const getAddValue = (state: EditorStore) => state.addValue;

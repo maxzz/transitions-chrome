@@ -2,15 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { type ExtensionMessage } from "@/9-shared/messages";
 import { getAddAnimations, getClear, getIsRecording, getSelectedAnimation, getSelectedAnimationName, useEditorState } from "../state/0-ui-store";
 import { injectClientIntoInspectedPage } from "./inject-client";
-import { getInspectedTabId, isExtensionContextValid, postToBackground } from "./runtime-context";
 
 export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
 
     useEffect(
         () => {
-            const tabId = getInspectedTabId();
-            if (!isExtensionContextValid() || typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
+            const tabId = chrome?.devtools?.inspectedWindow?.tabId;
+            if (typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
                 return;
             }
 
@@ -19,21 +18,12 @@ export function usePort() {
             let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
             const connect = () => {
-                if (!active || !isExtensionContextValid()) {
+                if (!active) {
                     return;
                 }
-
-                let nextPort: chrome.runtime.Port;
-                try {
-                    nextPort = chrome.runtime.connect({ name: "devtools-page" });
-                } catch {
-                    return;
-                }
-
+                const nextPort = chrome.runtime.connect({ name: "devtools-page" });
                 currentPort = nextPort;
-                if (!postToBackground(nextPort, { type: "init", tabId })) {
-                    return;
-                }
+                nextPort.postMessage({ type: "init", tabId });
 
                 nextPort.onDisconnect.addListener(
                     () => {
@@ -46,9 +36,6 @@ export function usePort() {
                         setPort(undefined);
                         console.log("%c currentPort disconnected", "color: red; font-weight: bold;");
 
-                        if (!isExtensionContextValid()) {
-                            return;
-                        }
                         reconnectTimer = setTimeout(connect, 0);
                     }
                 );
@@ -64,35 +51,18 @@ export function usePort() {
                 if (reconnectTimer !== undefined) {
                     clearTimeout(reconnectTimer);
                 }
-                try {
-                    currentPort?.disconnect();
-                } catch {
-                    // Context already gone.
-                }
+                currentPort?.disconnect();
             };
         },
         []);
 
     useEffect(
         () => {
-            if (!isExtensionContextValid()) {
-                return;
-            }
             const onNavigated = chrome?.devtools?.network?.onNavigated;
             if (!onNavigated) return;
             const listener = () => injectClientIntoInspectedPage();
-            try {
-                onNavigated.addListener(listener);
-            } catch {
-                return;
-            }
-            return () => {
-                try {
-                    onNavigated.removeListener(listener);
-                } catch {
-                    // Context already gone.
-                }
-            };
+            onNavigated.addListener(listener);
+            return () => onNavigated.removeListener(listener);
         },
         []);
 
@@ -126,25 +96,14 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
                         return;
                     case "clientready":
                         injectClientIntoInspectedPage();
-                        const tabId = getInspectedTabId();
-                        if (tabId !== undefined) {
-                            postToBackground(port, { type: "isrecording", isRecording: getIsRecording(useEditorState.getState()), tabId });
-                        }
+                        port.postMessage({ type: "isrecording", isRecording: getIsRecording(useEditorState.getState()), tabId: chrome.devtools.inspectedWindow.tabId });
                 }
             };
 
-            try {
-                port.onMessage.addListener(listener);
-            } catch {
-                return;
-            }
+            port.onMessage.addListener(listener);
             return () => {
                 active = false;
-                try {
-                    port.onMessage.removeListener(listener);
-                } catch {
-                    // Context already gone.
-                }
+                port.onMessage.removeListener(listener);
             };
         },
         [port, addAnimations, clear]);
@@ -154,10 +113,7 @@ function useIsRecording(port?: chrome.runtime.Port) {
     const isRecording = useEditorState(getIsRecording);
     useEffect(
         () => {
-            const tabId = getInspectedTabId();
-            if (tabId !== undefined) {
-                postToBackground(port, { type: "isrecording", isRecording, tabId });
-            }
+            port?.postMessage({ type: "isrecording", isRecording, tabId: chrome.devtools.inspectedWindow.tabId });
         },
         [port, isRecording]);
 }
@@ -174,22 +130,16 @@ function useEditAnimation(port?: chrome.runtime.Port) {
                 return;
             }
 
-            const tabId = getInspectedTabId();
-            if (tabId === undefined) {
-                prevSelectedAnimation.current = selectedAnimation;
-                return;
-            }
-
             let message: ExtensionMessage | undefined;
             if (selectedAnimationName && selectedAnimation && prevSelectedAnimation.current !== selectedAnimation) {
-                message = { type: "inspectanimation", animation: selectedAnimation, tabId };
+                message = { type: "inspectanimation", animation: selectedAnimation, tabId: chrome.devtools.inspectedWindow.tabId };
             }
             else if (time !== undefined && prevSelectedAnimation.current) {
-                message = { type: "scrubanimation", time, tabId };
+                message = { type: "scrubanimation", time, tabId: chrome.devtools.inspectedWindow.tabId };
             }
 
             if (message) {
-                postToBackground(port, message);
+                port.postMessage(message);
             }
             prevSelectedAnimation.current = selectedAnimation;
         },

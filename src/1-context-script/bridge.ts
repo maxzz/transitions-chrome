@@ -1,7 +1,6 @@
 import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/9-shared/messages";
 import { isExtensionMessage } from "@/9-shared/messages";
 import { getPageClientFile } from "./page-client-filenames";
-import { INVALID_CTX_MESSAGE_TYPE } from "./runtime/port-disconnected-report";
 
 //---------------------------------------------------------------------------
 // Flow:
@@ -73,28 +72,8 @@ function handleMessagesFromWebPage(event: MessageEvent) {
     }
 }
 
-function isRuntimeAlive() {
-    try {
-        return Boolean(chrome.runtime?.id);
-    } catch {
-        return false;
-    }
-}
-
-function reportInvalidCtx() {
-    window.postMessage({ type: INVALID_CTX_MESSAGE_TYPE }, "*");
-}
-
 function connect() {
-    if (!isRuntimeAlive()) {
-        reportInvalidCtx();
-        return;
-    }
-    try {
-        bindPortListeners(chrome.runtime.connect({ name: "client" }));
-    } catch {
-        reportInvalidCtx();
-    }
+    bindPortListeners(chrome.runtime.connect({ name: "client" }));
 }
 
 function bindPortListeners(port: chrome.runtime.Port) {
@@ -112,8 +91,5 @@ function bindPortListeners(port: chrome.runtime.Port) {
     port.onDisconnect.addListener(() => {
         backgroundPort = undefined;
         console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
-        if (!isRuntimeAlive()) {
-            reportInvalidCtx();
-        }
     });
 }

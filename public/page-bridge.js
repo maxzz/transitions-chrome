@@ -28,34 +28,11 @@
         port.onDisconnect.addListener(function () {
             backgroundPort = undefined;
             console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
-            if (!isRuntimeAlive()) {
-                reportInvalidCtx();
-            }
         });
     }
 
-    function isRuntimeAlive() {
-        try {
-            return Boolean(chrome.runtime && chrome.runtime.id);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function reportInvalidCtx() {
-        window.postMessage({ type: "invalidctx" }, "*");
-    }
-
     function connect() {
-        if (!isRuntimeAlive()) {
-            reportInvalidCtx();
-            return;
-        }
-        try {
-            bindPortListeners(chrome.runtime.connect({ name: "client" }));
-        } catch (e) {
-            reportInvalidCtx();
-        }
+        bindPortListeners(chrome.runtime.connect({ name: "client" }));
     }
 
     connect();

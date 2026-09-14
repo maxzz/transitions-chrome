@@ -1,5 +1,4 @@
 import clientScript from "../../1-context-script/0-all/0-client-entry?script&iife";
-import { isExtensionContextValid } from "./runtime-context";
 
 /**
  * Run the page-world IIFE in the inspected tab via the DevTools protocol.
@@ -7,17 +6,11 @@ import { isExtensionContextValid } from "./runtime-context";
  */
 export function injectClientIntoInspectedPage() {
     const inspectedWindow = chrome?.devtools?.inspectedWindow;
-    if (!inspectedWindow?.eval || !isExtensionContextValid() || typeof chrome.runtime?.getURL !== "function") {
+    if (!inspectedWindow?.eval || !chrome?.runtime?.getURL) {
         return;
     }
 
-    let url: string;
-    try {
-        url = chrome.runtime.getURL(pageClientFile());
-    } catch {
-        return;
-    }
-
+    const url = chrome.runtime.getURL(pageClientFile());
     fetch(url)
         .then((response) => {
             if (!response.ok) {
@@ -26,22 +19,12 @@ export function injectClientIntoInspectedPage() {
             return response.text();
         })
         .then((code) => {
-            if (!isExtensionContextValid()) {
-                return;
-            }
             inspectedWindow.eval(`${code}\n//# sourceURL=transitions-chrome-client.js`);
         })
         .catch(() => {
-            if (!isExtensionContextValid()) {
-                return;
-            }
-            try {
-                inspectedWindow.eval(
-                    `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`,
-                );
-            } catch {
-                // Inspected tab or extension context is gone.
-            }
+            inspectedWindow.eval(
+                `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`,
+            );
         });
 }
 
