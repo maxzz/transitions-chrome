@@ -20,16 +20,19 @@ export function injectClientIntoInspectedPage() {
 
     fetch(url)
         .then((response) => {
+            if (!isExtensionContextValid()) {
+                return "";
+            }
             if (!response.ok) {
                 throw new Error(String(response.status));
             }
             return response.text();
         })
         .then((code) => {
-            if (!isExtensionContextValid()) {
+            if (!code || !isExtensionContextValid()) {
                 return;
             }
-            inspectedWindow.eval(`${code}\n//# sourceURL=transitions-chrome-client.js`);
+            inspectedWindow.eval(`${code}\n//# sourceURL=transitions-chrome-client.js`, () => {});
         })
         .catch(() => {
             if (!isExtensionContextValid()) {
@@ -38,6 +41,7 @@ export function injectClientIntoInspectedPage() {
             try {
                 inspectedWindow.eval(
                     `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`,
+                    () => {},
                 );
             } catch {
                 // Inspected tab or extension context is gone.

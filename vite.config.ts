@@ -16,6 +16,8 @@ export default defineConfig({
     plugins: [tailwindcss(), react(), crx({ manifest })],
     define: {
         LIVE_RELOAD: "true",
+        "globalThis.LIVE_RELOAD": "true",
+        "self.LIVE_RELOAD": "true",
     },
     server: {
         cors: {

@@ -1,6 +1,8 @@
 import { type DevToolsToBackgroundMessage, type ExtensionMessage } from "@/9-shared/messages";
 import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-filenames";
 
+(globalThis as typeof globalThis & { LIVE_RELOAD: boolean }).LIVE_RELOAD = true;
+
 //---------------------------------------------------------------------------
 
 const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client"; // This should be ahead of call to pageClientFile()
@@ -36,15 +38,6 @@ async function registerPageClient() {
 
     const scripts: chrome.scripting.RegisteredContentScript[] = [
         {
-            id: PAGE_CLIENT_SCRIPT_ID,
-            js: [pageClientFile()],
-            matches: ["http://*/*", "https://*/*", "file:///*"],
-            allFrames: true,
-            runAt: "document_start",
-            world: "MAIN",
-            persistAcrossSessions: true,
-        },
-        {
             id: PAGE_BRIDGE_SCRIPT_ID,
             js: [getPageBridgeFile()],
             matches: ["http://*/*", "https://*/*", "file:///*"],
@@ -64,26 +57,67 @@ async function registerPageClient() {
     }
 }
 
-function injectIntoTab(tabId: number, file: string, world: "MAIN" | "ISOLATED", frameId?: number) {
+function injectionTarget(tabId: number, frameId?: number): chrome.scripting.InjectionTarget {
+    return typeof frameId === "number"
+        ? { tabId, frameIds: [frameId] }
+        : { tabId, allFrames: true };
+}
+
+function injectIsolatedBridge(tabId: number, frameId?: number) {
     if (!chrome.scripting?.executeScript) {
         return;
     }
-    const target: chrome.scripting.InjectionTarget =
-        typeof frameId === "number"
-            ? { tabId, frameIds: [frameId] }
-            : { tabId, allFrames: true };
     return chrome.scripting
-        .executeScript({ target, files: [file], world, injectImmediately: true, })
-        .catch((error) => {
+        .executeScript({
+            target: injectionTarget(tabId, frameId),
+            files: [getPageBridgeFile()],
+            world: "ISOLATED",
+            injectImmediately: true,
+        })
+        .catch(() => {
             // chrome://, Web Store, and other restricted pages reject injection.
-            console.error("Failed to inject into tab", error);
         });
+}
+
+async function injectMainWorldClient(tabId: number, frameId?: number) {
+    if (!chrome.scripting?.executeScript) {
+        return;
+    }
+
+    let url: string;
+    try {
+        url = chrome.runtime.getURL(pageClientFile());
+    } catch {
+        return;
+    }
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            return;
+        }
+        const code = await response.text();
+        await chrome.scripting.executeScript({
+            target: injectionTarget(tabId, frameId),
+            world: "MAIN",
+            injectImmediately: true,
+            func: (source: string) => {
+                if (window.__MOTION_DEV_TOOLS) {
+                    return;
+                }
+                (0, eval)(source);
+            },
+            args: [code],
+        });
+    } catch {
+        // Restricted page, CSP, or a dead extension context.
+    }
 }
 
 function injectPageClient(tabId: number, frameId?: number) {
     return Promise.all([
-        injectIntoTab(tabId, pageClientFile(), "MAIN", frameId),
-        injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId),
+        injectMainWorldClient(tabId, frameId),
+        injectIsolatedBridge(tabId, frameId),
     ]);
 }
 
