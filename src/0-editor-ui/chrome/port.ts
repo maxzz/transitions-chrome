@@ -1,47 +1,82 @@
 import { useEffect, useRef, useState } from "react";
 import { type ExtensionMessage } from "@/9-shared/messages";
 import { getAddAnimations, getClear, getIsRecording, getSelectedAnimation, getSelectedAnimationName, useEditorState } from "../state/0-ui-store";
-import { injectClientIntoInspectedPage } from "./inject-client";
+import { injectClientIntoInspectedPage, showInvalidCtxOnInspectedPage } from "./inject-client";
+import { isContextInvalidatedError, isExtensionContextValid, showInvalidCtx } from "../../1-context-script/runtime/port-disconnected-report";
 
 export function usePort() {
     const [port, setPort] = useState<chrome.runtime.Port>();
 
     useEffect(
         () => {
-            const tabId = chrome?.devtools?.inspectedWindow?.tabId;
-            if (typeof chrome?.runtime?.connect !== "function" || typeof tabId !== "number") {
+            const tabId = getInspectedTabId();
+            let canConnect = false;
+            try {
+                canConnect = typeof chrome?.runtime?.connect === "function";
+            } catch {
+                if (typeof tabId === "number") {
+                    reportDeadDevTools();
+                }
+                return;
+            }
+            if (!canConnect || typeof tabId !== "number") {
                 return;
             }
 
             let active = true;
             let currentPort: chrome.runtime.Port | undefined;
             let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+            let connectAttempts = 0;
 
             const connect = () => {
                 if (!active) {
                     return;
                 }
-                const nextPort = chrome.runtime.connect({ name: "devtools-page" });
-                currentPort = nextPort;
-                nextPort.postMessage({ type: "init", tabId });
+                if (!isExtensionContextValid()) {
+                    reportDeadDevTools();
+                    return;
+                }
+                try {
+                    const nextPort = chrome.runtime.connect({ name: "devtools-page" });
+                    currentPort = nextPort;
+                    connectAttempts = 0;
+                    nextPort.postMessage({ type: "init", tabId });
 
-                nextPort.onDisconnect.addListener(
-                    () => {
-                        if (!active) {
-                            return;
-                        }
-                        if (currentPort === nextPort) {
-                            currentPort = undefined;
-                        }
-                        setPort(undefined);
-                        console.log("%c currentPort disconnected", "color: red; font-weight: bold;");
+                    nextPort.onDisconnect.addListener(
+                        () => {
+                            if (!active) {
+                                return;
+                            }
+                            if (currentPort === nextPort) {
+                                currentPort = undefined;
+                            }
+                            setPort(undefined);
+                            console.log("%c currentPort disconnected", "color: red; font-weight: bold;");
 
-                        reconnectTimer = setTimeout(connect, 0);
+                            if (!isExtensionContextValid()) {
+                                reportDeadDevTools();
+                                return;
+                            }
+                            reconnectTimer = setTimeout(connect, 0);
+                        }
+                    );
+
+                    setPort(nextPort);
+                    injectClientIntoInspectedPage();
+                } catch (error) {
+                    currentPort = undefined;
+                    setPort(undefined);
+                    if (isContextInvalidatedError(error) || !isExtensionContextValid()) {
+                        reportDeadDevTools();
+                        return;
                     }
-                );
-
-                setPort(nextPort);
-                injectClientIntoInspectedPage();
+                    connectAttempts += 1;
+                    if (connectAttempts >= 3) {
+                        showInvalidCtx("reload-extension");
+                        return;
+                    }
+                    reconnectTimer = setTimeout(connect, 50);
+                }
             };
 
             connect();
@@ -51,7 +86,11 @@ export function usePort() {
                 if (reconnectTimer !== undefined) {
                     clearTimeout(reconnectTimer);
                 }
-                currentPort?.disconnect();
+                try {
+                    currentPort?.disconnect();
+                } catch {
+                    // Context already gone.
+                }
             };
         },
         []);
@@ -61,8 +100,18 @@ export function usePort() {
             const onNavigated = chrome?.devtools?.network?.onNavigated;
             if (!onNavigated) return;
             const listener = () => injectClientIntoInspectedPage();
-            onNavigated.addListener(listener);
-            return () => onNavigated.removeListener(listener);
+            try {
+                onNavigated.addListener(listener);
+            } catch {
+                return;
+            }
+            return () => {
+                try {
+                    onNavigated.removeListener(listener);
+                } catch {
+                    // Context already gone.
+                }
+            };
         },
         []);
 
@@ -94,16 +143,31 @@ function useIncomingMessages(port?: chrome.runtime.Port) {
                     case "clear":
                         clear();
                         return;
-                    case "clientready":
+                    case "clientready": {
+                        const tabId = getInspectedTabId();
+                        if (typeof tabId !== "number") {
+                            return;
+                        }
                         injectClientIntoInspectedPage();
-                        port.postMessage({ type: "isrecording", isRecording: getIsRecording(useEditorState.getState()), tabId: chrome.devtools.inspectedWindow.tabId });
+                        postToBackground(port, { type: "isrecording", isRecording: getIsRecording(useEditorState.getState()), tabId });
+                        return;
+                    }
                 }
             };
 
-            port.onMessage.addListener(listener);
+            try {
+                port.onMessage.addListener(listener);
+            } catch (error) {
+                reportPortFailure(error);
+                return;
+            }
             return () => {
                 active = false;
-                port.onMessage.removeListener(listener);
+                try {
+                    port.onMessage.removeListener(listener);
+                } catch {
+                    // Context already gone.
+                }
             };
         },
         [port, addAnimations, clear]);
@@ -113,7 +177,11 @@ function useIsRecording(port?: chrome.runtime.Port) {
     const isRecording = useEditorState(getIsRecording);
     useEffect(
         () => {
-            port?.postMessage({ type: "isrecording", isRecording, tabId: chrome.devtools.inspectedWindow.tabId });
+            const tabId = getInspectedTabId();
+            if (typeof tabId !== "number") {
+                return;
+            }
+            postToBackground(port, { type: "isrecording", isRecording, tabId });
         },
         [port, isRecording]);
 }
@@ -130,19 +198,56 @@ function useEditAnimation(port?: chrome.runtime.Port) {
                 return;
             }
 
+            const tabId = getInspectedTabId();
+            if (typeof tabId !== "number") {
+                return;
+            }
+
             let message: ExtensionMessage | undefined;
             if (selectedAnimationName && selectedAnimation && prevSelectedAnimation.current !== selectedAnimation) {
-                message = { type: "inspectanimation", animation: selectedAnimation, tabId: chrome.devtools.inspectedWindow.tabId };
+                message = { type: "inspectanimation", animation: selectedAnimation, tabId };
             }
             else if (time !== undefined && prevSelectedAnimation.current) {
-                message = { type: "scrubanimation", time, tabId: chrome.devtools.inspectedWindow.tabId };
+                message = { type: "scrubanimation", time, tabId };
             }
 
             if (message) {
-                port.postMessage(message);
+                postToBackground(port, message);
             }
             prevSelectedAnimation.current = selectedAnimation;
         },
         [port, selectedAnimationName, selectedAnimation?.elements, time, selectedAnimation]);
 }
 
+function getInspectedTabId() {
+    try {
+        const tabId = chrome?.devtools?.inspectedWindow?.tabId;
+        return typeof tabId === "number" ? tabId : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function postToBackground(port: chrome.runtime.Port | undefined, message: unknown) {
+    if (!port || !isExtensionContextValid()) {
+        return;
+    }
+    try {
+        port.postMessage(message);
+    } catch (error) {
+        reportPortFailure(error);
+    }
+}
+
+function reportPortFailure(error: unknown) {
+    if (isContextInvalidatedError(error) || !isExtensionContextValid()) {
+        reportDeadDevTools();
+        return;
+    }
+    showInvalidCtx("reload-extension");
+}
+
+function reportDeadDevTools() {
+    showInvalidCtx("reopen-devtools");
+    showInvalidCtxOnInspectedPage();
+}
