@@ -1,15 +1,14 @@
 import { type DevToolsToBackgroundMessage, type ExtensionMessage } from "@/9-shared/messages";
-import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-filenames";
+import { getPageBridgeFile } from "@/1-context-script/page-client-filenames";
 
 //---------------------------------------------------------------------------
 
-const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client"; // This should be ahead of call to pageClientFile()
-const PAGE_BRIDGE_SCRIPT_ID = "transitions-chrome-page-bridge"; // This should be ahead of call to pageClientFile() 
+const PAGE_BRIDGE_SCRIPT_ID = "transitions-chrome-page-bridge";
 
 const devToolsConnections = new Map<number, chrome.runtime.Port>();
 const clientConnections = new Map<number, Map<number, chrome.runtime.Port>>();
 
-registerPageClient();
+registerPageBridge();
 
 chrome.runtime.onConnect.addListener(handleNewConnections);
 chrome.runtime.onMessage.addListener(forwardClientMessagesToDevTools);
@@ -17,50 +16,33 @@ chrome.webNavigation.onCommitted.addListener(clearTimelineOnReload, { url: [{ ur
 
 //---------------------------------------------------------------------------
 
-function pageClientFile() {
-    return getPageClientFile();
-}
-
-async function registerPageClient() {
+async function registerPageBridge() {
     if (!chrome.scripting?.registerContentScripts) {
         return;
     }
-    
+
     try {
         await chrome.scripting.unregisterContentScripts({
-            ids: [PAGE_CLIENT_SCRIPT_ID, PAGE_BRIDGE_SCRIPT_ID],
+            ids: [PAGE_BRIDGE_SCRIPT_ID, "transitions-chrome-page-client"],
         });
     } catch {
         // Not registered yet.
     }
 
-    const scripts: chrome.scripting.RegisteredContentScript[] = [
-        {
-            id: PAGE_CLIENT_SCRIPT_ID,
-            js: [pageClientFile()],
-            matches: ["http://*/*", "https://*/*", "file:///*"],
-            allFrames: true,
-            runAt: "document_start",
-            world: "MAIN",
-            persistAcrossSessions: true,
-        },
-        {
-            id: PAGE_BRIDGE_SCRIPT_ID,
-            js: [getPageBridgeFile()],
-            matches: ["http://*/*", "https://*/*", "file:///*"],
-            allFrames: true,
-            runAt: "document_start",
-            world: "ISOLATED",
-            persistAcrossSessions: true,
-        },
-    ];
-
-    for (const script of scripts) {
-        try {
-            await chrome.scripting.registerContentScripts([script]);
-        } catch (error) {
-            console.error("Failed to register page client", error);
-        }
+    try {
+        await chrome.scripting.registerContentScripts([
+            {
+                id: PAGE_BRIDGE_SCRIPT_ID,
+                js: [getPageBridgeFile()],
+                matches: ["http://*/*", "https://*/*", "file:///*"],
+                allFrames: true,
+                runAt: "document_start",
+                world: "ISOLATED",
+                persistAcrossSessions: true,
+            },
+        ]);
+    } catch (error) {
+        console.error("Failed to register page bridge", error);
     }
 }
 
@@ -81,10 +63,7 @@ function injectIntoTab(tabId: number, file: string, world: "MAIN" | "ISOLATED", 
 }
 
 function injectPageClient(tabId: number, frameId?: number) {
-    return Promise.all([
-        injectIntoTab(tabId, pageClientFile(), "MAIN", frameId),
-        injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId),
-    ]);
+    return injectIntoTab(tabId, getPageBridgeFile(), "ISOLATED", frameId);
 }
 
 //---------------------------------------------------------------------------
