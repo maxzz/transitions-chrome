@@ -4,7 +4,11 @@ import { AddIcon, CodeExportIcon, InspectIcon } from "./8-icons";
 import { getSetIsExportOpen, useEditorState } from "../state/0-ui-store";
 
 function inspect(motionId: string) {
-    chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
+    try {
+        chrome.devtools.inspectedWindow.eval(`inspect($("[data-motion-id='${motionId}']"))`, () => { });
+    } catch {
+        // DevTools page outlived a reload.
+    }
 }
 
 const getAddValue = (state: EditorStore) => state.addValue;
