@@ -13,8 +13,9 @@ import { PlaybackControls } from "./2-3-playback-controls";
 import { CodeExportPopover } from "./7-0-code-export-popover";
 
 export function Timeline() {
-    const ref = useRef<HTMLDivElement | null>(null);
-    const [measureRef, rect] = useMeasure();
+    const scrollRef = useRef<HTMLElement | null>(null);
+    const [viewportRef, viewport] = useMeasure({ debounce: 1 });
+    const [contentRef, content] = useMeasure({ debounce: 1 });
 
     const { animations, selectedAnimationName, deselectKeyframes, isExportOpen } = useEditorState(getTimelineState, shallow);
     if (!selectedAnimationName) {
@@ -25,17 +26,28 @@ export function Timeline() {
         return null;
     }
 
+    const timelineRect = {
+        width: viewport.width,
+        height: content.height || viewport.height,
+    };
+
     return (
-        <motion.main ref={ref} className="relative flex flex-1 [overflow:overlay] [--row-height:28px] [--sidebar-width:220px]">
+        <motion.main
+            ref={(node) => {
+                scrollRef.current = node;
+                viewportRef(node);
+            }}
+            className="relative flex min-h-0 min-w-0 flex-1 overflow-auto scrollbar-gutter-stable [--row-height:28px] [--sidebar-width:220px]"
+        >
 
             {/* Main content */}
-            <div className="grid grid-cols-[var(--sidebar-width)_1fr]" ref={measureRef} key={selectedAnimationName}>
+            <div className="grid min-w-0 grid-cols-[var(--sidebar-width)_1fr]" ref={contentRef} key={selectedAnimationName}>
                 <Sidebar animation={selectedAnimation} />
 
                 {/* Visualization of the timeline */}
-                <div className="relative flex flex-1 flex-col" onClick={deselectKeyframes}>
-                    <TimeMarkers containerRef={ref} timelineRect={rect} currentTime={selectedAnimation.currentTime} />
-                    <Keyframes containerRef={ref} animation={selectedAnimation} />
+                <div className="relative flex min-w-0 flex-1 flex-col" onClick={deselectKeyframes}>
+                    <TimeMarkers containerRef={scrollRef} timelineRect={timelineRect} currentTime={selectedAnimation.currentTime} />
+                    <Keyframes containerRef={scrollRef} animation={selectedAnimation} />
                     <PlaybackControls />
                 </div>
             </div>
