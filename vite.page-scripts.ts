@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
-import type { Plugin } from "vite";
+import type { CrxPlugin } from "@crxjs/vite-plugin";
 
 const PAGE_BRIDGE = "page-bridge.js";
 const PAGE_CLIENT = "page-client.js";
@@ -39,7 +39,7 @@ async function copyNamed(outDir: string, sources: string[], destName: string) {
     }
 }
 
-export function emitStablePageScripts(): Plugin {
+export function emitStablePageScripts(): CrxPlugin {
     let outDir = "";
 
     const copyAll = () => Promise.all([
@@ -75,12 +75,7 @@ export function emitStablePageScripts(): Plugin {
             });
             copy();
         },
-        renderCrxManifest(manifest: {
-            web_accessible_resources?: Array<{
-                matches: string[];
-                resources: string[];
-            }>;
-        }) {
+        renderCrxManifest(manifest) {
             manifest.web_accessible_resources ??= [];
             manifest.web_accessible_resources.push({
                 matches: ["http://*/*", "https://*/*", "file:///*"],
