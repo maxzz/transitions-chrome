@@ -11,6 +11,8 @@
 
     var backgroundPort;
 
+    injectPageClient();
+
     function bindPortListeners(port) {
         backgroundPort = port;
 
@@ -31,6 +33,48 @@
             if (!isRuntimeAlive()) {
                 reportInvalidCtx();
             }
+        });
+    }
+
+    function findPageClientUrl() {
+        try {
+            var groups = (chrome.runtime.getManifest().web_accessible_resources || []);
+            for (var i = 0; i < groups.length; i++) {
+                var resources = groups[i].resources || [];
+                for (var j = 0; j < resources.length; j++) {
+                    if (String(resources[j]).indexOf("0-client-entry") !== -1) {
+                        return chrome.runtime.getURL(resources[j]);
+                    }
+                }
+            }
+        } catch (e) {
+            // Fall through to the CRXJS dev IIFE path.
+        }
+        return chrome.runtime.getURL("src/1-context-script/0-all/0-client-entry.ts.js");
+    }
+
+    function injectPageClient() {
+        var url = findPageClientUrl();
+        try {
+            var request = new XMLHttpRequest();
+            request.open("GET", url, false);
+            request.send();
+            if (request.status === 200 && request.responseText) {
+                var script = document.createElement("script");
+                script.textContent = request.responseText;
+                (document.head || document.documentElement).appendChild(script);
+                script.remove();
+                return;
+            }
+        } catch (e) {
+            // Page CSP can block inline scripts; fall back to a file URL.
+        }
+        var fallback = document.createElement("script");
+        fallback.src = url;
+        fallback.async = false;
+        (document.head || document.documentElement).appendChild(fallback);
+        fallback.addEventListener("load", function () {
+            fallback.remove();
         });
     }
 

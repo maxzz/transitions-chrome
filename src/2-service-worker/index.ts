@@ -1,8 +1,6 @@
 import { type DevToolsToBackgroundMessage, type ExtensionMessage } from "@/9-shared/messages";
 import { getPageBridgeFile, getPageClientFile } from "@/1-context-script/page-client-filenames";
 
-(globalThis as typeof globalThis & { LIVE_RELOAD: boolean }).LIVE_RELOAD = true;
-
 //---------------------------------------------------------------------------
 
 const PAGE_CLIENT_SCRIPT_ID = "transitions-chrome-page-client"; // This should be ahead of call to pageClientFile()
@@ -79,7 +77,7 @@ function injectIsolatedBridge(tabId: number, frameId?: number) {
         });
 }
 
-async function injectMainWorldClient(tabId: number, frameId?: number) {
+function injectMainWorldClient(tabId: number, frameId?: number) {
     if (!chrome.scripting?.executeScript) {
         return;
     }
@@ -91,27 +89,40 @@ async function injectMainWorldClient(tabId: number, frameId?: number) {
         return;
     }
 
+    return chrome.scripting
+        .executeScript({
+            target: injectionTarget(tabId, frameId),
+            world: "ISOLATED",
+            injectImmediately: true,
+            func: injectClientFromExtensionUrl,
+            args: [url],
+        })
+        .catch(() => {
+            // Restricted page or a dead extension context.
+        });
+}
+
+function injectClientFromExtensionUrl(url: string) {
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
+        const request = new XMLHttpRequest();
+        request.open("GET", url, false);
+        request.send();
+        if (request.status === 200 && request.responseText) {
+            const script = document.createElement("script");
+            script.textContent = request.responseText;
+            (document.head ?? document.documentElement).appendChild(script);
+            script.remove();
             return;
         }
-        const code = await response.text();
-        await chrome.scripting.executeScript({
-            target: injectionTarget(tabId, frameId),
-            world: "MAIN",
-            injectImmediately: true,
-            func: (source: string) => {
-                if (window.__MOTION_DEV_TOOLS) {
-                    return;
-                }
-                (0, eval)(source);
-            },
-            args: [code],
-        });
     } catch {
-        // Restricted page, CSP, or a dead extension context.
+        // Page CSP can block inline scripts.
     }
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.async = false;
+    (document.head ?? document.documentElement).appendChild(script);
+    script.addEventListener("load", () => script.remove());
 }
 
 function injectPageClient(tabId: number, frameId?: number) {
