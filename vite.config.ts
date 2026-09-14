@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import manifest from "./manifest.config.ts";
+import { emitStablePageScripts } from "./vite.page-scripts.ts";
 
 const rootDir = import.meta.dirname;
 
@@ -13,7 +14,7 @@ export default defineConfig({
             "@": path.resolve(rootDir, "src"),
         },
     },
-    plugins: [tailwindcss(), react(), crx({ manifest })],
+    plugins: [tailwindcss(), react(), crx({ manifest }), emitStablePageScripts()],
     define: {
         LIVE_RELOAD: "true",
     },

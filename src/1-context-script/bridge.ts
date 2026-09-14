@@ -1,95 +1,73 @@
 import type { BackgroundToPageMessage, PageToBackgroundMessage } from "@/9-shared/messages";
 import { isExtensionMessage } from "@/9-shared/messages";
-import { getPageClientFile } from "./page-client-filenames";
+import { PAGE_CLIENT_FILE } from "./page-iife-files";
 
 //---------------------------------------------------------------------------
-// Flow:
-// 1. Inject page client
-// 2. Connect to background
+// Isolated-world content script (compiled to an IIFE).
+// 1. Inject the MAIN-world page client
+// 2. Connect to the service worker
+// 3. Relay window.postMessage ↔ chrome.runtime.Port("client")
 
-// 3. Handle messages from web page
-// 4. Handle messages from background
+if (!window.__MOTION_BRIDGE_HAS_LOADED) {
+    window.__MOTION_BRIDGE_HAS_LOADED = true;
+    boot();
+}
 
-// 5. Handle messages from dev tools
-// 6. Handle messages from web page
+function boot() {
+    injectPageClient();
 
-// 7. Handle messages from background
-// 8. Handle messages from dev tools
+    let backgroundPort: chrome.runtime.Port | undefined;
 
-window.__MOTION_BRIDGE_HAS_LOADED = true;
+    connect();
+    chrome.runtime.onConnect.addListener(bindPortListeners);
 
-injectPageClient();
+    window.addEventListener("message", handleMessagesFromWebPage, false);
+    window.postMessage({ type: "requestclientready" }, "*");
 
-let backgroundPort: chrome.runtime.Port | undefined;
+    function handleMessagesFromWebPage(event: MessageEvent) {
+        if (event.source !== window) return;
+        if (!isExtensionMessage(event.data)) return;
 
-connect();
-chrome.runtime.onConnect.addListener(bindPortListeners);
-
-window.addEventListener("message", handleMessagesFromWebPage, false);
-window.postMessage({ type: "requestclientready" }, "*");
-
-//---------------------------------------------------------------------------
-
-function injectPageClient() {
-    const url = chrome.runtime.getURL(getPageClientFile());
-
-    try {
-        const request = new XMLHttpRequest();
-        request.open("GET", url, false);
-        request.send();
-
-        if (request.status === 200 && request.responseText) {
-            const script = document.createElement("script");
-            script.textContent = request.responseText;
-            (document.head ?? document.documentElement).appendChild(script);
-            script.remove();
-            return;
+        if (!backgroundPort) {
+            connect();
         }
-    } catch {
-        // Page CSP can block inline scripts; fall back to a file URL.
+
+        switch (event.data.type) {
+            case "animationstart":
+            case "clientready": {
+                backgroundPort?.postMessage(event.data as PageToBackgroundMessage);
+            }
+        }
     }
 
+    function connect() {
+        bindPortListeners(chrome.runtime.connect({ name: "client" }));
+    }
+
+    function bindPortListeners(port: chrome.runtime.Port) {
+        backgroundPort = port;
+
+        port.onMessage.addListener((backgroundMessage: BackgroundToPageMessage) => {
+            switch (backgroundMessage.type) {
+                case "tabId": return;
+                case "isrecording":
+                case "inspectanimation":
+                case "scrubanimation": window.postMessage(backgroundMessage, "*");
+            }
+        });
+
+        port.onDisconnect.addListener(() => {
+            backgroundPort = undefined;
+            console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
+        });
+    }
+}
+
+function injectPageClient() {
+    const url = chrome.runtime.getURL(PAGE_CLIENT_FILE);
     const script = document.createElement("script");
     script.src = url;
     script.async = false;
     (document.head ?? document.documentElement).appendChild(script);
     script.addEventListener("load", () => script.remove());
-}
-
-function handleMessagesFromWebPage(event: MessageEvent) {
-    if (event.source !== window) return;
-    if (!isExtensionMessage(event.data)) return;
-
-    if (!backgroundPort) {
-        connect();
-    }
-
-    switch (event.data.type) {
-        case "animationstart":
-        case "clientready": {
-            backgroundPort?.postMessage(event.data as PageToBackgroundMessage);
-        }
-    }
-}
-
-function connect() {
-    bindPortListeners(chrome.runtime.connect({ name: "client" }));
-}
-
-function bindPortListeners(port: chrome.runtime.Port) {
-    backgroundPort = port;
-
-    port.onMessage.addListener((backgroundMessage: BackgroundToPageMessage) => {
-        switch (backgroundMessage.type) {
-            case "tabId": return;
-            case "isrecording":
-            case "inspectanimation":
-            case "scrubanimation": window.postMessage(backgroundMessage, "*");
-        }
-    });
-
-    port.onDisconnect.addListener(() => {
-        backgroundPort = undefined;
-        console.log("%c backgroundPort disconnected", "color: red; font-weight: bold;");
-    });
 }

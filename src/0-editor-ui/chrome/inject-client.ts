@@ -1,4 +1,4 @@
-import clientScript from "../../1-context-script/0-all/0-client-entry?script&iife";
+import { getPageClientFile } from "../../1-context-script/page-client-filenames";
 
 /**
  * Run the page-world IIFE in the inspected tab via the DevTools protocol.
@@ -10,7 +10,7 @@ export function injectClientIntoInspectedPage() {
         return;
     }
 
-    const url = chrome.runtime.getURL(pageClientFile());
+    const url = chrome.runtime.getURL(getPageClientFile());
     fetch(url)
         .then((response) => {
             if (!response.ok) {
@@ -28,6 +28,3 @@ export function injectClientIntoInspectedPage() {
         });
 }
 
-function pageClientFile() {
-    return String(clientScript).replace(/^\//, ""); // Remove leading slash from the script path
-}

@@ -1,15 +1,16 @@
 import clientScript from "./0-all/0-client-entry?script&iife";
+import bridgeScript from "./bridge?script&iife";
+import { PAGE_BRIDGE_FILE, PAGE_CLIENT_FILE } from "./page-iife-files";
 
-/** Extension-relative path to the bundled page-world IIFE. */
+export const crxClientIife = clientScript;
+export const crxBridgeIife = bridgeScript;
+
+/** Extension-relative path to the MAIN-world page client IIFE. */
 export function getPageClientFile() {
-    return toExtensionFile(clientScript);
+    return PAGE_CLIENT_FILE;
 }
 
-function toExtensionFile(id: string) {
-    return String(id).replace(/^\//, "");
-}
-
-/** Static isolated-world bridge copied from /public. */
+/** Extension-relative path to the isolated-world bridge IIFE compiled from bridge.ts. */
 export function getPageBridgeFile() {
-    return "page-bridge.js";
+    return PAGE_BRIDGE_FILE;
 }
