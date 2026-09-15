@@ -17,7 +17,7 @@ export function injectClientIntoInspectedPage() {
 
     let url: string;
     try {
-        url = chrome.runtime.getURL(getPageClientFile());
+        url = chrome.runtime.getURL(getPageClientFile()); // i.e. "page-client.js"  
     } catch {
         return;
     }
@@ -39,10 +39,8 @@ export function injectClientIntoInspectedPage() {
             if (!isExtensionContextValid()) {
                 return;
             }
-            inspectedWindow.eval(
-                `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`,
-                () => {},
-            );
+            const evalCode = `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`;
+            inspectedWindow.eval(evalCode, () => {});
         });
 }
 
@@ -50,6 +48,7 @@ export function injectClientIntoInspectedPage() {
 export function showInvalidCtxOnInspectedPage() {
     const inspectedWindow = chrome?.devtools?.inspectedWindow;
     if (!inspectedWindow?.eval) {
+        console.log("showInvalidCtxOnInspectedPage: no inspectedWindow.eval");
         return;
     }
     try {

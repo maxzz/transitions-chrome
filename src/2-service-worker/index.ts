@@ -33,7 +33,7 @@ async function registerPageBridge() {
         await chrome.scripting.registerContentScripts([
             {
                 id: PAGE_BRIDGE_SCRIPT_ID,
-                js: [getPageBridgeFile()],
+                js: [getPageBridgeFile()], // i.e. "page-bridge.js"
                 matches: ["http://*/*", "https://*/*", "file:///*"],
                 allFrames: true,
                 runAt: "document_start",
