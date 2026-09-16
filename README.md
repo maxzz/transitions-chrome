@@ -2,7 +2,7 @@
 
 Chrome DevTools extension for inspecting, scrubbing, and exporting page transitions. The long-term goal is a single panel that can compare how different animation stacks move the same UI — **Motion**, **GSAP**, **react-spring**, and CSS — without switching tools.
 
-This repo is a TypeScript + Vite rebuild of Motion DevTools `2.0.0`, renamed so it can sit beside the store extension. Recording today covers CSS animations, CSS transitions, and Motion One (`window.__MOTION_DEV_TOOLS_RECORD`). Other libraries are the next detection targets.
+This repo is a TypeScript + Vite rebuild of Motion DevTools `2.0.0`, renamed so it can sit beside the store extension. Recording today covers CSS animations, CSS transitions, and Motion One (`window.__TM_MOTION_DEV_TOOLS_RECORD`). Other libraries are the next detection targets.
 
 ## Table of contents
 
@@ -39,7 +39,7 @@ Animation libraries expose different timing models, easing formats, and element 
 | Stack | Intent |
 | --- | --- |
 | CSS animations / transitions | Web Animations API on the element |
-| Motion (Motion One today; Motion for React later) | Page hook `__MOTION_DEV_TOOLS_RECORD` |
+| Motion (Motion One today; Motion for React later) | Page hook `__TM_MOTION_DEV_TOOLS_RECORD` |
 | GSAP | Planned: detect tweens / timelines on the inspected page |
 | react-spring | Planned: detect spring-driven values |
 
@@ -48,7 +48,7 @@ The DevTools panel is the shared timeline. Page detection lives in `src/1-contex
 ## What it does today
 
 - Records CSS `@keyframes` animations and CSS transitions on the inspected page
-- Records Motion One animations that call `window.__MOTION_DEV_TOOLS_RECORD`
+- Records Motion One animations that call `window.__TM_MOTION_DEV_TOOLS_RECORD`
 - Shows a timeline in a DevTools panel named **transitions-chrome**
 - Lets you select keyframes, edit values / easings, play, and scrub
 - Exports the selected animation as Motion One, CSS animation, or CSS transition
@@ -94,7 +94,7 @@ src/
     plugins/
       css-animation.ts    CSSAnimation via animationstart
       css-transition.ts   CSSTransition via transitionrun / transitionstart
-      motion-one.ts       Sets / clears __MOTION_DEV_TOOLS_RECORD
+      motion-one.ts       Sets / clears __TM_MOTION_DEV_TOOLS_RECORD
     runtime/              Playback used when the panel scrubs
       animate-style.ts
       style.ts

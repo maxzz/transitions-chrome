@@ -14,8 +14,8 @@ import {
 // 2. Connect to the service worker
 // 3. Relay window.postMessage ↔ chrome.runtime.Port("client")
 
-if (!window.__MOTION_BRIDGE_HAS_LOADED) {
-    window.__MOTION_BRIDGE_HAS_LOADED = true;
+if (!window.__TM_MOTION_BRIDGE_HAS_LOADED) {
+    window.__TM_MOTION_BRIDGE_HAS_LOADED = true;
     boot();
 }
 

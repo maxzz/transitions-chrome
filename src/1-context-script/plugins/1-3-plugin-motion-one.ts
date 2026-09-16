@@ -4,9 +4,9 @@ import { store } from "../8-0-store";
 export const motionOne: RecordPlugin = {
     id: "motion-one",
     onRecordStart: () => {
-        window.__MOTION_DEV_TOOLS_RECORD = store.getState().recordAnimation;
+        window.__TM_MOTION_DEV_TOOLS_RECORD = store.getState().recordAnimation;
     },
     onRecordEnd: () => {
-        window.__MOTION_DEV_TOOLS_RECORD = undefined;
+        window.__TM_MOTION_DEV_TOOLS_RECORD = undefined;
     },
 };

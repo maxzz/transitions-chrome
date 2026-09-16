@@ -39,7 +39,7 @@ export function injectClientIntoInspectedPage() {
             if (!isExtensionContextValid()) {
                 return;
             }
-            const evalCode = `(function(){if(window.__MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`;
+            const evalCode = `(function(){if(window.__TM_MOTION_DEV_TOOLS)return;var s=document.createElement("script");s.src=${JSON.stringify(url)};(document.head||document.documentElement).appendChild(s);})()`;
             inspectedWindow.eval(evalCode, () => {});
         });
 }

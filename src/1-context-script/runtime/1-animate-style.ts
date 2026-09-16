@@ -134,7 +134,7 @@ type EasingGenerator<TKeyframe = unknown> = {
 };
 
 function getDevToolsRecord() {
-    return window.__MOTION_DEV_TOOLS_RECORD;
+    return window.__TM_MOTION_DEV_TOOLS_RECORD;
 }
 
 //---------------------------------------------------------------------------
